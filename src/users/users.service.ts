@@ -110,7 +110,13 @@ export class UsersService {
       },
     });
   }
-
+  async getByUsername(username: string): Promise<User | null> {
+    return await this.prisma.user.findUnique({
+      where: {
+        username: username,
+      },
+    });
+  }
   async getByMobile(mobile: string): Promise<User | null> {
     return await this.prisma.user.findUnique({
       where: {
@@ -138,10 +144,10 @@ export class UsersService {
   }
 
   async validateCredentials(
-    email: string,
+    username: string,
     password: string,
   ): Promise<ValidatedUser | false | null> {
-    const user = await this.getByEmail(email);
+    const user = await this.getByUsername(username);
     if (!user) return null;
 
     const userMeta = await this.getMetaById(user.id);
@@ -153,10 +159,13 @@ export class UsersService {
         : this.config.passwordHashLength,
     );
     if (userMeta.passwordHash === passwordHash) {
-      return {
-        id: user.id,
-        type: UserType.User,
-      };
+      const userType = user.usertype;
+      if (userType === 'MANAGER' || userType === 'WORKER') {
+        return {
+          id: user.id,
+          type: userType as UserType,
+        };
+      }
     }
 
     return false;

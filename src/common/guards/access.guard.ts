@@ -33,7 +33,7 @@ export class AccessGuard implements CanActivate {
     const cacheTtl = 300000;
 
     if (await this.cacheManager.get(cacheKey)) return true;
-    if (user.type === UserType.User) {
+    if (user.type !== UserType.Admin) {
       const userInfo = await this.prisma.user.findUnique({
         where: { id: user.id },
       });

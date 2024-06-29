@@ -67,6 +67,8 @@ export interface File {
 export enum UserType {
   User = 'user',
   Admin = 'admin',
+  MANAGER = 'MANAGER',
+  WORKER = 'WORKER',
 }
 
 export interface JwtPayload {

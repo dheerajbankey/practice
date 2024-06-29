@@ -41,6 +41,21 @@ export class AdminService {
     );
     return { salt, hash };
   }
+  async isUsernameExist(
+    username: string,
+    excludeUserId?: string,
+  ): Promise<boolean> {
+    return (
+      (await this.prisma.user.count({
+        where: {
+          username,
+          NOT: {
+            id: excludeUserId,
+          },
+        },
+      })) !== 0
+    );
+  }
 
   async isEmailExist(email: string, excludeAdminId?: string): Promise<boolean> {
     return (
@@ -221,6 +236,47 @@ export class AdminService {
       data: { status },
       where: {
         id: userId,
+      },
+    });
+  }
+  async createSubUser(
+    firstname: string,
+    lastname: string,
+    username: string,
+    password: string,
+    usertype: string,
+  ) {
+    if (await this.isUsernameExist(username)) {
+      throw new Error('Username already exist');
+    }
+    const validUserTypes = ['MANAGER', 'WORKER'];
+    console.log('usertype', username, usertype);
+
+    if (!validUserTypes.includes(usertype)) {
+      throw new Error('UserType is not valid');
+    }
+
+    let passwordSalt = null;
+    let passwordHash = null;
+    if (password) {
+      const { salt, hash } = this.hashPassword(password);
+      passwordSalt = salt;
+      passwordHash = hash;
+    }
+
+    return await this.prisma.user.create({
+      data: {
+        firstname: firstname,
+        lastname: lastname,
+        username: username,
+        usertype: usertype,
+
+        meta: {
+          create: {
+            passwordHash,
+            passwordSalt,
+          },
+        },
       },
     });
   }

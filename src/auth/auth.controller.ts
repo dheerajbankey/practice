@@ -1,3 +1,5 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Req,
   Res,
@@ -134,38 +136,38 @@ export class AuthController extends BaseController {
     return response;
   }
 
-  @Post('register')
-  async register(
-    @Res({ passthrough: true }) res: Response,
-    @Body() data: RegisterUserRequestDto,
-  ) {
-    const response = await this.authService.registerUser({
-      firstname: data.firstname,
-      lastname: data.lastname,
-      email: data.email,
-      password: data.password,
-      dialCode: data.dialCode,
-      mobile: data.mobile,
-      country: data.country,
-      emailVerificationCode: data.emailVerificationCode,
-      mobileVerificationCode: data.mobileVerificationCode,
-    });
+  // @Post('register')
+  // async register(
+  //   @Res({ passthrough: true }) res: Response,
+  //   @Body() data: RegisterUserRequestDto,
+  // ) {
+  //   const response = await this.authService.registerUser({
+  //     firstname: data.firstname,
+  //     lastname: data.lastname,
+  //     email: data.email,
+  //     password: data.password,
+  //     dialCode: data.dialCode,
+  //     mobile: data.mobile,
+  //     country: data.country,
+  //     emailVerificationCode: data.emailVerificationCode,
+  //     mobileVerificationCode: data.mobileVerificationCode,
+  //   });
 
-    if (
-      (response as InvalidVerifyCodeResponse).email ||
-      (response as InvalidVerifyCodeResponse).mobile
-    ) {
-      throw new UnprocessableEntityException({
-        statusCode: 422,
-        message: 'Invalid verification code',
-        meta: response as InvalidVerifyCodeResponse,
-      });
-    }
+  //   if (
+  //     (response as InvalidVerifyCodeResponse).email ||
+  //     (response as InvalidVerifyCodeResponse).mobile
+  //   ) {
+  //     throw new UnprocessableEntityException({
+  //       statusCode: 422,
+  //       message: 'Invalid verification code',
+  //       meta: response as InvalidVerifyCodeResponse,
+  //     });
+  //   }
 
-    const { accessToken, type } = response as ValidAuthResponse;
-    this.setAuthCookie(res, accessToken, type);
-    return { status: 'success' };
-  }
+  //   const { accessToken, type } = response as ValidAuthResponse;
+  //   this.setAuthCookie(res, accessToken, type);
+  //   return { status: 'success' };
+  // }
 
   @ApiBody({ type: () => LoginRequestDto })
   @UseGuards(LocalAuthGuard)
@@ -175,6 +177,7 @@ export class AuthController extends BaseController {
     @Req() req: Request & { user: ValidatedUser },
     @Res({ passthrough: true }) res: Response,
   ) {
+    console.log('test', req.user);
     const { accessToken, type } = await this.authService.login(
       req.user.id,
       req.user.type,
