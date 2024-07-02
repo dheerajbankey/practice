@@ -45,8 +45,9 @@ async function bootstrap() {
         new RegExp(
           `^http[s]{0,1}://(?:${appConfig.domain}|[a-z0-9-]+.${appConfig.domain})$`,
         ),
+        new RegExp('^http[s]{0,1}://localhost(:[0-9]+)?$'),
       ]
-    : [];
+    : [new RegExp('^http[s]{0,1}://localhost(:[0-9]+)?$')];
 
   app.useGlobalPipes(
     new ValidationPipe({
