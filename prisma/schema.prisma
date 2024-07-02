@@ -62,7 +62,7 @@ model User {
   updatedAt    DateTime      @updatedAt @map("updated_at")
   meta         UserMeta?
   settings     UserSetting[]
-  usertype     String        @map("usertype")
+  usertype     String?       @map("usertype")
   credit       Int?
   balance      Int?
 
