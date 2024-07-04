@@ -8,7 +8,7 @@ import { GoogleStrategy, LocalStrategy } from './strategies';
 import { AdminModule } from '../admin';
 import { UsersModule } from '../users';
 import { OtpModule } from '../otp';
-
+import { PrismaService } from '../prisma';
 @Module({
   imports: [
     AdminModule,
@@ -23,7 +23,7 @@ import { OtpModule } from '../otp';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, GoogleStrategy],
+  providers: [AuthService, LocalStrategy, GoogleStrategy, PrismaService],
   exports: [AuthService],
 })
 export class AuthModule {}

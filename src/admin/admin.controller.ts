@@ -100,6 +100,7 @@ export class AdminController extends BaseController {
       data.username,
       data.password,
       data.usertype,
+      data.currency,
     );
   }
 }
