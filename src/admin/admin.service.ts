@@ -245,6 +245,7 @@ export class AdminService {
     username: string,
     password: string,
     usertype: string,
+    currency: string,
   ) {
     if (await this.isUsernameExist(username)) {
       throw new Error('Username already exist');
@@ -270,6 +271,7 @@ export class AdminService {
         lastname: lastname,
         username: username,
         usertype: usertype,
+        currency: currency,
 
         meta: {
           create: {

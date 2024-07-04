@@ -4,16 +4,35 @@ import { OtpTransport, User } from '@prisma/client';
 import { JwtPayload, UserType } from '@Common';
 import { SendCodeRequestType } from './dto';
 import { UsersService } from '../users';
+import { PrismaService } from '../prisma';
 import {
   OtpContext,
   OtpService,
   SendCodeResponse,
   VerifyCodeResponse,
 } from '../otp';
-
+export type ValidatedUser = {
+  id: string;
+  firstname: string;
+  lastname: string;
+  username?: string | null;
+  email?: string | null;
+  dialCode?: string | null;
+  mobile?: string | null;
+  profileImage?: string | null;
+  isVerified?: boolean | null;
+  country?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  usertype?: string | null;
+  credit?: number | null;
+  balance?: number | null;
+  currency?: string | null;
+};
 export type ValidAuthResponse = {
   accessToken: string;
   type: UserType;
+  user?: ValidatedUser;
 };
 
 export type InvalidVerifyCodeResponse = {
@@ -27,12 +46,19 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly otpService: OtpService,
+    private readonly prisma: PrismaService,
   ) {}
 
   private generateJwt(payload: JwtPayload, options?: JwtSignOptions): string {
     return this.jwtService.sign(payload, options);
   }
-
+  async getById(userId: string): Promise<ValidatedUser> {
+    return await this.prisma.user.findUniqueOrThrow({
+      where: {
+        id: userId,
+      },
+    });
+  }
   async sendCode(
     target: string,
     transport: OtpTransport,
@@ -70,12 +96,22 @@ export class AuthService {
   }
 
   async login(userId: string, type: UserType): Promise<ValidAuthResponse> {
-    return {
-      accessToken: this.generateJwt({
-        sub: userId,
-        type,
-      }),
+    // return {
+    //   accessToken: this.generateJwt({
+    //     sub: userId,
+    //     type,
+    //   }),
+    //   type,
+    // };
+    const accessToken = this.generateJwt({
+      sub: userId,
       type,
+    });
+    const user = (await this.getById(userId)) as ValidatedUser; // Fetch user details by ID
+    return {
+      accessToken,
+      type,
+      user,
     };
   }
 
