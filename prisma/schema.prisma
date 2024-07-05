@@ -65,6 +65,7 @@ model User {
   usertype     String?       @map("usertype")
   credit       Int?
   balance      Int?
+  currency     String?
 
   @@map("user")
 }
