@@ -96,23 +96,23 @@ export class AuthService {
   }
 
   async login(userId: string, type: UserType): Promise<ValidAuthResponse> {
-    // return {
-    //   accessToken: this.generateJwt({
-    //     sub: userId,
-    //     type,
-    //   }),
-    //   type,
-    // };
-    const accessToken = this.generateJwt({
-      sub: userId,
-      type,
-    });
-    const user = (await this.getById(userId)) as ValidatedUser; // Fetch user details by ID
     return {
-      accessToken,
+      accessToken: this.generateJwt({
+        sub: userId,
+        type,
+      }),
       type,
-      user,
     };
+    // const accessToken = this.generateJwt({
+    //   sub: userId,
+    //   type,
+    // });
+    // const user = (await this.getById(userId)) as ValidatedUser; // Fetch user details by ID
+    // return {
+    //   accessToken,
+    //   type,
+    //   user,
+    // };
   }
 
   async registerUser(data: {
