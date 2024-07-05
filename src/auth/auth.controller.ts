@@ -178,12 +178,12 @@ export class AuthController extends BaseController {
     @Res({ passthrough: true }) res: Response,
   ) {
     console.log('test', req.user);
-    const { accessToken, type, user } = await this.authService.login(
+    const { accessToken, type } = await this.authService.login(
       req.user.id,
       req.user.type,
     );
     this.setAuthCookie(res, accessToken, type);
-    return { status: 'success', type, user };
+    return { status: 'success', type, accessToken };
   }
 
   @UseGuards(GoogleOAuthGuard)
