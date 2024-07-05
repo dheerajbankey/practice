@@ -264,7 +264,7 @@ export class UsersService {
     };
   }
 
-  async getProfile(userId: string, type?: string): Promise<User | Admin> {
+  async getProfile(userId: string, type?: string): Promise<any> {
     let user;
     if (type !== 'admin') {
       user = await this.getById(userId);
@@ -279,7 +279,7 @@ export class UsersService {
         );
       }
     }
-    return user;
+    return { user, type };
   }
 
   async updateProfileDetails(
