@@ -39,6 +39,7 @@ export class AdminController extends BaseController {
   @Get()
   async getProfile(@Req() req: AuthenticatedRequest) {
     const ctx = this.getContext(req);
+    console.log(ctx);
     return await this.adminService.getProfile(ctx.user.id);
   }
 

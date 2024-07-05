@@ -55,7 +55,8 @@ export class UsersController extends BaseController {
   @Get('me')
   async getProfile(@Req() req: AuthenticatedRequest) {
     const ctx = this.getContext(req);
-    return await this.usersService.getProfile(ctx.user.id);
+    console.log(ctx);
+    return await this.usersService.getProfile(ctx.user.id, ctx.user.type);
   }
 
   @Patch('me')

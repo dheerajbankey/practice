@@ -25,7 +25,7 @@ export class AdminService {
     private readonly storageService: StorageService,
   ) {}
 
-  private getProfileImageUrl(profileImage: string): string {
+  getProfileImageUrl(profileImage: string): string {
     return this.storageService.getFileUrl(
       profileImage,
       this.config.profileImagePath,

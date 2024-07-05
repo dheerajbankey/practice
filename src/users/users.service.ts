@@ -2,6 +2,7 @@ import { join } from 'path';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import {
+  Admin,
   OtpTransport,
   Prisma,
   User,
@@ -17,6 +18,7 @@ import {
   SendCodeResponse,
   VerifyCodeResponse,
 } from '../otp';
+import { AdminService } from 'src/admin';
 
 @Injectable()
 export class UsersService {
@@ -27,6 +29,7 @@ export class UsersService {
     private readonly utilsService: UtilsService,
     private readonly storageService: StorageService,
     private readonly otpService: OtpService,
+    private readonly adminService: AdminService,
   ) {}
 
   private getProfileImageUrl(profileImage: string): string {
@@ -261,10 +264,20 @@ export class UsersService {
     };
   }
 
-  async getProfile(userId: string): Promise<User> {
-    const user = await this.getById(userId);
-    if (user.profileImage) {
-      user.profileImage = this.getProfileImageUrl(user.profileImage);
+  async getProfile(userId: string, type?: string): Promise<User | Admin> {
+    let user;
+    if (type !== 'admin') {
+      user = await this.getById(userId);
+      if (user.profileImage) {
+        user.profileImage = this.getProfileImageUrl(user.profileImage);
+      }
+    } else {
+      user = await this.adminService.getById(userId);
+      if (user.profileImage) {
+        user.profileImage = this.adminService.getProfileImageUrl(
+          user.profileImage,
+        );
+      }
     }
     return user;
   }
