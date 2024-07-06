@@ -4,6 +4,7 @@ import {
   Get,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -24,6 +25,7 @@ import {
   UpdateProfileDetailsRequestDto,
   UpdateProfileImageRequestDto,
   createUserRequestDto,
+  getUserByTypeDto,
 } from './dto';
 
 @ApiTags('Admin')
@@ -103,5 +105,13 @@ export class AdminController extends BaseController {
       data.usertype,
       data.currency,
     );
+  }
+
+  @Get('get-all-user')
+  async getDetails(@Query() query: getUserByTypeDto) {
+    console.log('Ths is getall user');
+    const skip = query.skip ?? 0; // Default to 0 if undefined
+    const take = query.take ?? 10;
+    return await this.adminService.getUserByType(query.userType, skip, take);
   }
 }

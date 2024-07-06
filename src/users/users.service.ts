@@ -329,6 +329,20 @@ export class UsersService {
     });
   }
 
+  async updateProfileDetailsOFAdmin(data: {
+    userId: string;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+  }) {
+    const user = await this.adminService.updateProfileDetails(
+      data.userId,
+      data.firstname,
+      data.lastname,
+      data.email,
+    );
+    return user;
+  }
   async updateProfileDetailsByAdministrator(data: {
     userId: string;
     username?: string;

@@ -3,7 +3,7 @@ import { Cache } from 'cache-manager';
 import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Admin, AdminMeta, AdminStatus } from '@prisma/client';
+import { Admin, AdminMeta, AdminStatus, User } from '@prisma/client';
 import { adminConfigFactory } from '@Config';
 import {
   StorageService,
@@ -281,5 +281,35 @@ export class AdminService {
         },
       },
     });
+  }
+
+  // async getUserByType(
+  //   usertype: string,
+  //   skip: number,
+  //   take: number,
+  // ): Promise<User> {
+  //   const page = await prisma.get.findMany({
+  //     where: usertype,
+  //     skip: skip,
+  //     take: take,
+  //   });
+  //   return page;
+  // }
+  async getUserByType(
+    usertype: string,
+    skip: number,
+    take: number,
+  ): Promise<{ users: User[]; total: number }> {
+    const total = await this.prisma.user.count({
+      where: { usertype },
+    });
+
+    const users = await this.prisma.user.findMany({
+      where: { usertype },
+      skip: skip,
+      take: take,
+    });
+
+    return { users, total };
   }
 }

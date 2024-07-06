@@ -39,6 +39,7 @@ export class UpdateProfileDetailsRequestDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
   @IsPhoneNumber(undefined, {
     message:
       'The mobile number you entered is invalid, please provide a valid mobile number',
