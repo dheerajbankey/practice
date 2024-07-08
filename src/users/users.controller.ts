@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseEnumPipe,
+  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -34,15 +35,16 @@ import {
 
 @ApiTags('User')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, AccessGuard)
+//@UseGuards(JwtAuthGuard, AccessGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController extends BaseController {
   constructor(private readonly usersService: UsersService) {
     super();
   }
 
-  @Roles(UserType.Admin)
-  @UseGuards(RolesGuard)
+  // @Roles(UserType.Admin)
+  // @UseGuards(RolesGuard)
   @Get()
   async getUsers(@Query() query: GetUsersRequestDto) {
     return await this.usersService.getAll({
@@ -64,21 +66,34 @@ export class UsersController extends BaseController {
     @Req() req: AuthenticatedRequest,
     @Body() data: UpdateProfileDetailsRequestDto,
   ) {
-    if (data.mobile && (!data.dialCode || !data.country)) {
-      throw new BadRequestException();
-    }
+    // if (data.mobile && (!data.dialCode || !data.country)) {
+    //   throw new BadRequestException();
+    // }
     const ctx = this.getContext(req);
-    await this.usersService.updateProfileDetails({
-      userId: ctx.user.id,
-      username: data.username,
-      firstname: data.firstname,
-      lastname: data.lastname,
-      email: data.email,
-      dialCode: data.dialCode,
-      mobile: data.mobile,
-      country: data.country,
-    });
-    return { status: 'success' };
+    console.log('This is ctx', ctx);
+    console.log('This is req.body', req.body);
+    const type = ctx.user.type;
+    if (type !== 'admin') {
+      await this.usersService.updateProfileDetails({
+        userId: ctx.user.id,
+        username: data.username,
+        firstname: data.firstname,
+        lastname: data.lastname,
+        email: data.email,
+        dialCode: data.dialCode,
+        mobile: data.mobile,
+        country: data.country,
+      });
+      return { status: 'success' };
+    } else {
+      await this.usersService.updateProfileDetailsOFAdmin({
+        userId: ctx.user.id,
+        firstname: data.firstname,
+        lastname: data.lastname,
+        email: data.email,
+      });
+      return { status: 'success' };
+    }
   }
 
   @Roles(UserType.Admin)
@@ -123,12 +138,22 @@ export class UsersController extends BaseController {
     @Body() data: ChangePasswordRequestDto,
   ) {
     const ctx = this.getContext(req);
-    await this.usersService.changePassword(
-      ctx.user.id,
-      data.oldPassword,
-      data.newPassword,
-    );
-    return { status: 'success' };
+    const type = ctx.user.type;
+    if (type !== 'admin') {
+      await this.usersService.changePassword(
+        ctx.user.id,
+        data.oldPassword,
+        data.newPassword,
+      );
+      return { status: 'success' };
+    } else {
+      await this.usersService.adminChangePassword(
+        ctx.user.id,
+        data.oldPassword,
+        data.newPassword,
+      );
+      return { status: 'success' };
+    }
   }
 
   @ApiParam({ name: 'status', enum: UserStatus })
@@ -139,6 +164,7 @@ export class UsersController extends BaseController {
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('status', new ParseEnumPipe(UserStatus)) status: UserStatus,
   ) {
+    console.log('This is userid', userId);
     await this.usersService.setStatus(userId, status);
     return { status: 'success' };
   }
