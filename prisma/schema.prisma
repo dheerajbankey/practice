@@ -23,6 +23,7 @@ model Admin {
   email        String      @unique
   profileImage String?     @map("profile_image")
   status       AdminStatus @default(Active)
+  balance      Int?        @default(0)
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
   meta         AdminMeta?
@@ -47,25 +48,26 @@ enum UserStatus {
 }
 
 model User {
-  id           String        @id @default(uuid()) @db.Uuid
+  id           String           @id @default(uuid()) @db.Uuid
   firstname    String
   lastname     String
-  username     String?       @unique
-  email        String?       @unique
-  dialCode     String?       @map("dial_code")
-  mobile       String?       @unique
-  profileImage String?       @map("profile_image")
-  isVerified   Boolean?      @default(false) @map("is_verified")
+  username     String?          @unique
+  email        String?          @unique
+  dialCode     String?          @map("dial_code")
+  mobile       String?          @unique
+  profileImage String?          @map("profile_image")
+  isVerified   Boolean?         @default(false) @map("is_verified")
   country      String?
-  status       UserStatus    @default(Active)
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
+  status       UserStatus       @default(Active)
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
   meta         UserMeta?
   settings     UserSetting[]
-  usertype     String?       @map("usertype")
+  usertype     String?          @map("usertype")
   credit       Int?
-  balance      Int?
+  balance      Int?             @default(0)
   currency     String?
+  users        UserCreateRoom[]
 
   @@map("user")
 }
@@ -165,4 +167,31 @@ model SystemSetting {
 
   @@id([settingId])
   @@map("system_setting")
+}
+
+model CreateRoom {
+  id           String           @id @default(uuid()) @db.Uuid
+  roomName     String           @map("room_name")
+  noOFMachines Int              @map("no_of_machines")
+  noOfSpins    Int              @map("no_of_spins")
+  minJackpot   Int              @map("min_jackpot")
+  maxJackpot   Int              @map("max_jackpot")
+  minBet       Int              @map("min_bet")
+  maxBet       Int              @map("max_bet")
+  rtp          Int
+  currency     String
+  room         UserCreateRoom[]
+
+  @@map("create_room")
+}
+
+model UserCreateRoom {
+  userId String @map("user_id") @db.Uuid
+  roomId String @map("room_id") @db.Uuid
+
+  user User       @relation(fields: [userId], references: [id])
+  room CreateRoom @relation(fields: [roomId], references: [id])
+
+  @@id([userId, roomId])
+  @@map("user_create_room")
 }

@@ -329,6 +329,20 @@ export class UsersService {
     });
   }
 
+  async updateProfileDetailsOFAdmin(data: {
+    userId: string;
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+  }) {
+    const user = await this.adminService.updateProfileDetails(
+      data.userId,
+      data.firstname,
+      data.lastname,
+      data.email,
+    );
+    return user;
+  }
   async updateProfileDetailsByAdministrator(data: {
     userId: string;
     username?: string;
@@ -437,6 +451,18 @@ export class UsersService {
       },
     });
     return user;
+  }
+  async adminChangePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+  ): Promise<Admin> {
+    const admin = await this.adminService.changePassword(
+      userId,
+      oldPassword,
+      newPassword,
+    );
+    return admin;
   }
 
   async sendResetPasswordVerificationCode(email?: string, mobile?: string) {

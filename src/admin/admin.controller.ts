@@ -2,8 +2,12 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
+  ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -24,12 +28,14 @@ import {
   UpdateProfileDetailsRequestDto,
   UpdateProfileImageRequestDto,
   createUserRequestDto,
+  getUserByTypeDto,
+  //createRoomDto,
 } from './dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
 @Roles(UserType.Admin)
-// @UseGuards(JwtAuthGuard, AccessGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, AccessGuard, RolesGuard)
 @Controller('admin')
 export class AdminController extends BaseController {
   constructor(private readonly adminService: AdminService) {
@@ -87,6 +93,7 @@ export class AdminController extends BaseController {
     @Body() data: AuthenticateRequestDto,
   ) {
     const ctx = this.getContext(req);
+    console.log('THis si ctx admin di', ctx.user.id);
     await this.adminService.authenticate(ctx.user.id, data.password);
     return { status: 'success' };
   }
@@ -103,5 +110,47 @@ export class AdminController extends BaseController {
       data.usertype,
       data.currency,
     );
+  }
+
+  @Get('get-all-user')
+  async getDetails(@Query() query: getUserByTypeDto) {
+    console.log('Ths is getall user');
+    const skip = query.skip ?? 0; // Default to 0 if undefined
+    const take = query.take ?? 10;
+    const search = query.search ?? '';
+    const userType = query.userType ?? '';
+    return await this.adminService.getUserByType(userType, search, skip, take);
+  }
+
+  // @Roles(UserType.Admin)
+  // @UseGuards(RolesGuard)
+  @Post('add-amount/:userId/:amount')
+  async addAmount(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Param('amount', ParseIntPipe) amount: number,
+  ) {
+    await this.adminService.addAmount(userId, amount);
+    return { status: 'success' };
+  }
+
+  @Post('remove-amount/:userId/:amount')
+  async removeAmount(
+    @Req() req: AuthenticatedRequest,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Param('amount', ParseIntPipe) amount: number,
+  ) {
+    const ctx = this.getContext(req);
+    const adminId = ctx.user.id;
+    console.log('THis is adminid', adminId);
+    await this.adminService.removeAmount(userId, amount, adminId);
+    return { status: 'success' };
+  }
+
+  @Roles(UserType.Admin)
+  @UseGuards(RolesGuard)
+  @Get('checkstatus/:userId')
+  async checkStatus(@Param('userId', ParseUUIDPipe) userId: string) {
+    const result = await this.adminService.checkStatus(userId);
+    return { status: result };
   }
 }
