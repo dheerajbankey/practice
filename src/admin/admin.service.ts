@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { Cache } from 'cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UseGuards } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Admin, AdminMeta, AdminStatus, User } from '@prisma/client';
@@ -11,6 +11,8 @@ import {
   ValidatedUser,
   UserType,
   getAccessGuardCacheKey,
+  Roles,
+  RolesGuard,
 } from '@Common';
 import { PrismaService } from '../prisma';
 
@@ -283,18 +285,6 @@ export class AdminService {
     });
   }
 
-  // async getUserByType(
-  //   usertype: string,
-  //   skip: number,
-  //   take: number,
-  // ): Promise<User> {
-  //   const page = await prisma.get.findMany({
-  //     where: usertype,
-  //     skip: skip,
-  //     take: take,
-  //   });
-  //   return page;
-  // }
   async getUserByType(
     usertype: string,
     search: string,
@@ -327,6 +317,91 @@ export class AdminService {
       });
 
       return { users, total };
+    }
+  }
+  async addAmount(userId: string, amount: number): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new Error(`User not found`);
+    }
+    const balanceToUpdate = user.balance === null ? 0 : user.balance;
+    const updatedAmount = await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        balance: {
+          set: balanceToUpdate + amount,
+        },
+      },
+    });
+    return updatedAmount;
+  }
+  async removeAmount(
+    userId: string,
+    amount: number,
+    adminId: string,
+  ): Promise<User> {
+    console.log('These is user ID', userId);
+    console.log('These is admin ID', adminId);
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new Error(`User not found`);
+    }
+    const balanceToUpdate = user.balance === null ? 0 : user.balance;
+    if (balanceToUpdate == 0 || balanceToUpdate < amount) {
+      throw new Error('Insufficient Amount');
+    }
+    const updatedAmount = await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        balance: {
+          set: balanceToUpdate - amount,
+        },
+      },
+    });
+    // const updateAmountToAdmin =
+    await this.prisma.admin.update({
+      where: {
+        id: adminId,
+      },
+      data: {
+        balance: {
+          increment: amount,
+        },
+      },
+    });
+    return updatedAmount;
+  }
+
+  async checkStatus(userId: string): Promise<boolean> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new Error(`User not found`);
+    }
+
+    if (user.status === 'Active') {
+      console.log('Thes is user status', user.status);
+      return true;
+    } else {
+      return false;
     }
   }
 }

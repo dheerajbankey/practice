@@ -23,6 +23,7 @@ model Admin {
   email        String      @unique
   profileImage String?     @map("profile_image")
   status       AdminStatus @default(Active)
+  balance      Int?        @default(0)
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
   meta         AdminMeta?

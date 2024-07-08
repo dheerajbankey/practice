@@ -168,33 +168,4 @@ export class UsersController extends BaseController {
     await this.usersService.setStatus(userId, status);
     return { status: 'success' };
   }
-
-  @Roles(UserType.Admin)
-  @UseGuards(RolesGuard)
-  @Get('checkstatus/:userId')
-  async checkStatus(@Param('userId', ParseUUIDPipe) userId: string) {
-    const result = await this.usersService.checkStatus(userId);
-    return { status: result };
-  }
-
-  @Roles(UserType.Admin)
-  @UseGuards(RolesGuard)
-  @Post('add-amount/:userId/:amount')
-  async addAmount(
-    @Param('userId', ParseUUIDPipe) userId: string,
-    @Param('amount', ParseIntPipe) amount: number,
-  ) {
-    await this.usersService.addAmount(userId, amount);
-    return { status: 'success' };
-  }
-  @Roles(UserType.Admin)
-  @UseGuards(RolesGuard)
-  @Post('remove-amount/:userId/:amount')
-  async removeAmount(
-    @Param('userId', ParseUUIDPipe) userId: string,
-    @Param('amount', ParseIntPipe) amount: number,
-  ) {
-    await this.usersService.removeAmount(userId, amount);
-    return { status: 'success' };
-  }
 }
