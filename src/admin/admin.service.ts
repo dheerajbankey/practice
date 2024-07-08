@@ -297,19 +297,36 @@ export class AdminService {
   // }
   async getUserByType(
     usertype: string,
+    search: string,
     skip: number,
     take: number,
-  ): Promise<{ users: User[]; total: number }> {
-    const total = await this.prisma.user.count({
-      where: { usertype },
-    });
+  ): Promise<{ users: User[]; total?: number }> {
+    if (search) {
+      const users = await this.prisma.user.findFirst({
+        where: {
+          username: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+      });
+      if (!users) {
+        return { users: [] };
+      }
 
-    const users = await this.prisma.user.findMany({
-      where: { usertype },
-      skip: skip,
-      take: take,
-    });
+      return { users: [users] };
+    } else {
+      const total = await this.prisma.user.count({
+        where: { usertype },
+      });
 
-    return { users, total };
+      const users = await this.prisma.user.findMany({
+        where: { usertype },
+        skip: skip,
+        take: take,
+      });
+
+      return { users, total };
+    }
   }
 }

@@ -3,8 +3,14 @@ import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class getUserByTypeDto {
   @ApiPropertyOptional()
+  @IsOptional()
   @IsString()
-  userType: string;
+  userType?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  search?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

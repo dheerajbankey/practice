@@ -112,6 +112,8 @@ export class AdminController extends BaseController {
     console.log('Ths is getall user');
     const skip = query.skip ?? 0; // Default to 0 if undefined
     const take = query.take ?? 10;
-    return await this.adminService.getUserByType(query.userType, skip, take);
+    const search = query.search ?? '';
+    const userType = query.userType ?? '';
+    return await this.adminService.getUserByType(userType, search, skip, take);
   }
 }

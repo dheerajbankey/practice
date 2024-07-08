@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseEnumPipe,
+  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -137,12 +138,22 @@ export class UsersController extends BaseController {
     @Body() data: ChangePasswordRequestDto,
   ) {
     const ctx = this.getContext(req);
-    await this.usersService.changePassword(
-      ctx.user.id,
-      data.oldPassword,
-      data.newPassword,
-    );
-    return { status: 'success' };
+    const type = ctx.user.type;
+    if (type !== 'admin') {
+      await this.usersService.changePassword(
+        ctx.user.id,
+        data.oldPassword,
+        data.newPassword,
+      );
+      return { status: 'success' };
+    } else {
+      await this.usersService.adminChangePassword(
+        ctx.user.id,
+        data.oldPassword,
+        data.newPassword,
+      );
+      return { status: 'success' };
+    }
   }
 
   @ApiParam({ name: 'status', enum: UserStatus })
@@ -153,7 +164,37 @@ export class UsersController extends BaseController {
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('status', new ParseEnumPipe(UserStatus)) status: UserStatus,
   ) {
+    console.log('This is userid', userId);
     await this.usersService.setStatus(userId, status);
+    return { status: 'success' };
+  }
+
+  @Roles(UserType.Admin)
+  @UseGuards(RolesGuard)
+  @Get('checkstatus/:userId')
+  async checkStatus(@Param('userId', ParseUUIDPipe) userId: string) {
+    const result = await this.usersService.checkStatus(userId);
+    return { status: result };
+  }
+
+  @Roles(UserType.Admin)
+  @UseGuards(RolesGuard)
+  @Post('add-amount/:userId/:amount')
+  async addAmount(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Param('amount', ParseIntPipe) amount: number,
+  ) {
+    await this.usersService.addAmount(userId, amount);
+    return { status: 'success' };
+  }
+  @Roles(UserType.Admin)
+  @UseGuards(RolesGuard)
+  @Post('remove-amount/:userId/:amount')
+  async removeAmount(
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @Param('amount', ParseIntPipe) amount: number,
+  ) {
+    await this.usersService.removeAmount(userId, amount);
     return { status: 'success' };
   }
 }
