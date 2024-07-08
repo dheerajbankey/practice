@@ -7,8 +7,8 @@ export class createRoomDto {
   roomName: string;
 
   @ApiPropertyOptional()
-  @IsString()
-  noOfMachines: string;
+  @IsInt()
+  noOfMachines: number;
 
   @ApiPropertyOptional()
   @IsInt()
@@ -24,6 +24,16 @@ export class createRoomDto {
   @IsInt()
   //@Max(1000)
   maxJackpot: number;
+
+  @ApiPropertyOptional()
+  @IsInt()
+  //@Max(1000)
+  minBet: number;
+
+  @ApiPropertyOptional()
+  @IsInt()
+  //@Max(1000)
+  maxBet: number;
 
   @ApiPropertyOptional()
   @IsInt()
