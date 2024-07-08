@@ -172,7 +172,7 @@ model SystemSetting {
 model CreateRoom {
   id           String           @id @default(uuid()) @db.Uuid
   roomName     String           @map("room_name")
-  noOFMachines Int              @map("no_of_machines")
+  noOfMachines Int              @map("no_of_machines")
   noOfSpins    Int              @map("no_of_spins")
   minJackpot   Int              @map("min_jackpot")
   maxJackpot   Int              @map("max_jackpot")

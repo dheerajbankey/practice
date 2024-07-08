@@ -9,8 +9,6 @@ export abstract class BaseController {
   }
 
   protected getContext(req: AuthenticatedRequest): Context {
-    console.log('This is req of user', req.user);
-
     return {
       user: req.user,
     };

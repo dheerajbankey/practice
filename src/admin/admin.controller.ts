@@ -29,7 +29,10 @@ import {
   UpdateProfileImageRequestDto,
   createUserRequestDto,
   getUserByTypeDto,
-  //createRoomDto,
+  createRoomDto,
+  getManagerListDto,
+  getWorkerListDto,
+  updateStatusDto,
 } from './dto';
 
 @ApiTags('Admin')
@@ -115,15 +118,15 @@ export class AdminController extends BaseController {
   @Get('get-all-user')
   async getDetails(@Query() query: getUserByTypeDto) {
     console.log('Ths is getall user');
-    const skip = query.skip ?? 0; // Default to 0 if undefined
+    const skip = query.skip ?? 0;
     const take = query.take ?? 10;
     const search = query.search ?? '';
     const userType = query.userType ?? '';
     return await this.adminService.getUserByType(userType, search, skip, take);
   }
 
-  // @Roles(UserType.Admin)
-  // @UseGuards(RolesGuard)
+  @Roles(UserType.Admin)
+  @UseGuards(RolesGuard)
   @Post('add-amount/:userId/:amount')
   async addAmount(
     @Param('userId', ParseUUIDPipe) userId: string,
@@ -148,9 +151,54 @@ export class AdminController extends BaseController {
 
   @Roles(UserType.Admin)
   @UseGuards(RolesGuard)
-  @Get('checkstatus/:userId')
-  async checkStatus(@Param('userId', ParseUUIDPipe) userId: string) {
-    const result = await this.adminService.checkStatus(userId);
+  @Post('updatestatus')
+  async updateStatus(@Body() data: updateStatusDto) {
+    const result = await this.adminService.updateStatus(
+      data.userId,
+      data.status,
+    );
     return { status: result };
+  }
+
+  @Roles(UserType.Admin)
+  @UseGuards(RolesGuard)
+  @Post('create-room')
+  async createRoom(@Body() data: createRoomDto) {
+    return await this.adminService.createRoom(
+      data.roomName,
+      data.noOfMachines,
+      data.noOfSpins,
+      data.minJackpot,
+      data.maxJackpot,
+      data.minBet,
+      data.maxBet,
+      data.rtp,
+      data.currency,
+    );
+  }
+  @Get('get-master-list')
+  async getMasterList(@Query() query: getManagerListDto) {
+    const skip = query.skip ?? 0;
+    const take = query.take ?? 10;
+    const search = query.search ?? '';
+    return await this.adminService.getMasterList(
+      query.userType,
+      search,
+      skip,
+      take,
+    );
+  }
+
+  @Get('get-worker-list')
+  async getWorkerList(@Query() query: getWorkerListDto) {
+    const skip = query.skip ?? 0;
+    const take = query.take ?? 10;
+    const search = query.search ?? '';
+    return await this.adminService.getWorkerList(
+      query.userType,
+      search,
+      skip,
+      take,
+    );
   }
 }
