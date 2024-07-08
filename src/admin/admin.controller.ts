@@ -139,12 +139,18 @@ export class AdminController extends BaseController {
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('amount', ParseIntPipe) amount: number,
   ) {
-    console.log('here', userId);
     const ctx = this.getContext(req);
-    console.log('THis is ctx', ctx);
     const adminId = ctx.user.id;
     console.log('THis is adminid', adminId);
     await this.adminService.removeAmount(userId, amount, adminId);
     return { status: 'success' };
+  }
+
+  @Roles(UserType.Admin)
+  @UseGuards(RolesGuard)
+  @Get('checkstatus/:userId')
+  async checkStatus(@Param('userId', ParseUUIDPipe) userId: string) {
+    const result = await this.adminService.checkStatus(userId);
+    return { status: result };
   }
 }
