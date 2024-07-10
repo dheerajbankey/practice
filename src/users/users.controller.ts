@@ -1,11 +1,9 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
   Param,
   ParseEnumPipe,
-  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -22,7 +20,6 @@ import {
   RolesGuard,
   UserType,
   Roles,
-  AccessGuard,
 } from '@Common';
 import { UsersService } from './users.service';
 import {

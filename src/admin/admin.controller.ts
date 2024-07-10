@@ -129,10 +129,13 @@ export class AdminController extends BaseController {
   @UseGuards(RolesGuard)
   @Post('add-amount/:userId/:amount')
   async addAmount(
+    @Req() req: AuthenticatedRequest,
     @Param('userId', ParseUUIDPipe) userId: string,
     @Param('amount', ParseIntPipe) amount: number,
   ) {
-    await this.adminService.addAmount(userId, amount);
+    const ctx = this.getContext(req);
+    const adminId = ctx.user.id;
+    await this.adminService.addAmount(userId, amount, adminId);
     return { status: 'success' };
   }
 
@@ -144,7 +147,6 @@ export class AdminController extends BaseController {
   ) {
     const ctx = this.getContext(req);
     const adminId = ctx.user.id;
-    console.log('THis is adminid', adminId);
     await this.adminService.removeAmount(userId, amount, adminId);
     return { status: 'success' };
   }
