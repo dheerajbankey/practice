@@ -332,29 +332,104 @@ export class AdminService {
       return { users, total };
     }
   }
-  async addAmount(userId: string, amount: number): Promise<User> {
+  // async addAmount(
+  //   userId: string,
+  //   amount: number,
+  //   adminId: string,
+  // ): Promise<User> {
+  //   const user = await this.prisma.user.findUnique({
+  //     where: {
+  //       id: userId,
+  //     },
+  //   });
+
+  //   if (!user) {
+  //     throw new Error(`User not found`);
+  //   }
+  //   const admin = await this.prisma.admin.findUnique({
+  //     where: {
+  //       id: adminId,
+  //     },
+  //   });
+  //   const balanceToUpdate = admin.balance === null ? 0 : admin.balance;
+  //   if (amount < balanceToUpdate) {
+  //     await this.prisma.admin.update({
+  //       where: {
+  //         id: adminId,
+  //       },
+  //       data: {
+  //         balance: {
+  //           decrement: amount,
+  //         },
+  //       },
+  //     });
+  //     const updatedAmount = await this.prisma.user.update({
+  //       where: {
+  //         id: userId,
+  //       },
+  //       data: {
+  //         balance: {
+  //           set: balanceToUpdate + amount,
+  //         },
+  //       },
+  //     });
+  //     return updatedAmount;
+  //   }
+  // }
+  async addAmount(
+    userId: string,
+    amount: number,
+    adminId: string,
+  ): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
+      },
+    });
+    const admin = await this.prisma.admin.findUnique({
+      where: {
+        id: adminId,
       },
     });
 
     if (!user) {
       throw new Error(`User not found`);
     }
-    const balanceToUpdate = user.balance === null ? 0 : user.balance;
-    const updatedAmount = await this.prisma.user.update({
+
+    if (!admin) {
+      throw new Error(`Admin not found`);
+    }
+
+    const balanceToUpdate = admin.balance === null ? 0 : admin.balance;
+    const newAdminBalance = balanceToUpdate - amount;
+
+    if (newAdminBalance < 0) {
+      throw new Error(`Admin does not have sufficient balance`);
+    }
+    await this.prisma.admin.update({
+      where: {
+        id: adminId,
+      },
+      data: {
+        balance: {
+          decrement: amount,
+        },
+      },
+    });
+
+    const userbalance = user.balance === null ? 0 : user.balance;
+    const updatedUser = await this.prisma.user.update({
       where: {
         id: userId,
       },
       data: {
-        balance: {
-          set: balanceToUpdate + amount,
-        },
+        balance: userbalance + amount,
       },
     });
-    return updatedAmount;
+
+    return updatedUser;
   }
+
   async removeAmount(
     userId: string,
     amount: number,
@@ -480,24 +555,31 @@ export class AdminService {
     }[];
     total?: number;
   }> {
-    if (search) {
+    if (userType !== 'MANAGER') {
+      throw new Error('UserType is not valid');
+    }
+    if (search && userType == 'MANAGER') {
       const users = await this.prisma.user.findMany({
         where: {
+          usertype: 'MANAGER',
           username: {
             contains: search,
             mode: 'insensitive',
           },
         },
         select: {
+          id: true,
           firstname: true,
           lastname: true,
           credit: true,
           status: true,
+          usertype: true,
         },
       });
 
       const total = await this.prisma.user.count({
         where: {
+          usertype: 'MANAGER',
           username: {
             contains: search,
             mode: 'insensitive',
@@ -515,10 +597,12 @@ export class AdminService {
         skip: skip,
         take: take,
         select: {
+          id: true,
           firstname: true,
           lastname: true,
           credit: true,
           status: true,
+          usertype: true,
         },
       });
 
@@ -540,24 +624,31 @@ export class AdminService {
     }[];
     total?: number;
   }> {
-    if (search) {
+    if (userType !== 'WORKER') {
+      throw new Error('UserType is not valid');
+    }
+    if (search && userType == 'WORKER') {
       const users = await this.prisma.user.findMany({
         where: {
+          usertype: 'WORKER',
           username: {
             contains: search,
             mode: 'insensitive',
           },
         },
         select: {
+          id: true,
           firstname: true,
           lastname: true,
           credit: true,
           status: true,
+          usertype: true,
         },
       });
 
       const total = await this.prisma.user.count({
         where: {
+          usertype: 'WORKER',
           username: {
             contains: search,
             mode: 'insensitive',
@@ -575,10 +666,12 @@ export class AdminService {
         skip: skip,
         take: take,
         select: {
+          id: true,
           firstname: true,
           lastname: true,
           credit: true,
           status: true,
+          usertype: true,
         },
       });
 
