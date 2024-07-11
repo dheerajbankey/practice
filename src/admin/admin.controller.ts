@@ -33,7 +33,11 @@ import {
   getManagerListDto,
   getWorkerListDto,
   updateStatusDto,
+  createMachineDto,
+  getMachineListDto,
+  userFreezeDto,
 } from './dto';
+import { getRoomListDto } from './dto/get-room-list.dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -125,8 +129,6 @@ export class AdminController extends BaseController {
     return await this.adminService.getUserByType(userType, search, skip, take);
   }
 
-  @Roles(UserType.Admin)
-  @UseGuards(RolesGuard)
   @Post('add-amount/:userId/:amount')
   async addAmount(
     @Req() req: AuthenticatedRequest,
@@ -151,8 +153,6 @@ export class AdminController extends BaseController {
     return { status: 'success' };
   }
 
-  @Roles(UserType.Admin)
-  @UseGuards(RolesGuard)
   @Post('updatestatus')
   async updateStatus(@Body() data: updateStatusDto) {
     const result = await this.adminService.updateStatus(
@@ -162,8 +162,6 @@ export class AdminController extends BaseController {
     return { status: result };
   }
 
-  @Roles(UserType.Admin)
-  @UseGuards(RolesGuard)
   @Post('create-room')
   async createRoom(@Body() data: createRoomDto) {
     return await this.adminService.createRoom(
@@ -178,7 +176,17 @@ export class AdminController extends BaseController {
       data.currency,
     );
   }
-  @Get('get-master-list')
+
+  @Post('create-machine')
+  async createMachine(@Body() data: createMachineDto) {
+    return await this.adminService.createMachine(
+      data.machineNo,
+      data.balance,
+      data.roomId,
+    );
+  }
+
+  @Get('get-manager-list')
   async getMasterList(@Query() query: getManagerListDto) {
     const skip = query.skip ?? 0;
     const take = query.take ?? 10;
@@ -202,5 +210,32 @@ export class AdminController extends BaseController {
       skip,
       take,
     );
+  }
+
+  @Get('get-room-list')
+  async getRoomList(@Query() query: getRoomListDto) {
+    const skip = query.skip ?? 0;
+    const take = query.take ?? 10;
+    const search = query.search ?? '';
+    return await this.adminService.getRoomList(search, skip, take);
+  }
+
+  @Get('get-machine-list')
+  async getMachineList(@Query() query: getMachineListDto) {
+    const skip = query.skip ?? 0;
+    const take = query.take ?? 10;
+    const search = query.search ?? '';
+    return await this.adminService.getMachineList(search, skip, take);
+  }
+
+  @Patch('unfreeze')
+  async freeze(@Req() req: AuthenticatedRequest, @Body() data: userFreezeDto) {
+    await this.adminService.unfreeze(
+      data.id,
+      data.status,
+      data.machineNo,
+      data.roomName,
+    );
+    return { status: 'success' };
   }
 }

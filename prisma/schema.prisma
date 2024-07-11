@@ -48,26 +48,27 @@ enum UserStatus {
 }
 
 model User {
-  id           String           @id @default(uuid()) @db.Uuid
+  id           String        @id @default(uuid()) @db.Uuid
   firstname    String
   lastname     String
-  username     String?          @unique
-  email        String?          @unique
-  dialCode     String?          @map("dial_code")
-  mobile       String?          @unique
-  profileImage String?          @map("profile_image")
-  isVerified   Boolean?         @default(false) @map("is_verified")
+  username     String?       @unique
+  email        String?       @unique
+  dialCode     String?       @map("dial_code")
+  mobile       String?       @unique
+  profileImage String?       @map("profile_image")
+  isVerified   Boolean?      @default(false) @map("is_verified")
   country      String?
-  status       UserStatus       @default(Active)
-  createdAt    DateTime         @default(now()) @map("created_at")
-  updatedAt    DateTime         @updatedAt @map("updated_at")
+  status       UserStatus    @default(Active)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
   meta         UserMeta?
   settings     UserSetting[]
-  usertype     String?          @map("usertype")
+  usertype     String?       @map("usertype")
   credit       Int?
-  balance      Int?             @default(0)
+  balance      Int?          @default(0)
   currency     String?
-  users        UserCreateRoom[]
+  room         Room[]
+  machine      Machine[]
 
   @@map("user")
 }
@@ -169,29 +170,44 @@ model SystemSetting {
   @@map("system_setting")
 }
 
-model CreateRoom {
-  id           String           @id @default(uuid()) @db.Uuid
-  roomName     String           @map("room_name")
-  noOfMachines Int              @map("no_of_machines")
-  noOfSpins    Int              @map("no_of_spins")
-  minJackpot   Int              @map("min_jackpot")
-  maxJackpot   Int              @map("max_jackpot")
-  minBet       Int              @map("min_bet")
-  maxBet       Int              @map("max_bet")
+model Room {
+  id           String    @id @default(uuid()) @db.Uuid
+  roomName     String    @map("room_name")
+  noOfMachines Int       @map("no_of_machines")
+  noOfSpins    Int       @map("no_of_spins")
+  minJackpot   Int       @map("min_jackpot")
+  maxJackpot   Int       @map("max_jackpot")
+  minBet       Int       @map("min_bet")
+  maxBet       Int       @map("max_bet")
   rtp          Int
   currency     String
-  room         UserCreateRoom[]
+  status       String    @default("Unfreeze")
+  room         User[]
+  machine      Machine[]
 
   @@map("create_room")
 }
 
-model UserCreateRoom {
-  userId String @map("user_id") @db.Uuid
-  roomId String @map("room_id") @db.Uuid
+model Machine {
+  id        String  @id @default(uuid()) @db.Uuid
+  machineNo String
+  balance   Int
+  status    String  @default("Unfreeze")
+  user      User[]
+  room      Room?   @relation(fields: [rooomId], references: [id])
+  rooomId   String? @map("room_id") @db.Uuid
+  games     Game[]
 
-  user User       @relation(fields: [userId], references: [id])
-  room CreateRoom @relation(fields: [roomId], references: [id])
+  @@map("create_machine")
+}
 
-  @@id([userId, roomId])
-  @@map("user_create_room")
+model Game {
+  id        String   @id @default(uuid()) @db.Uuid
+  gameName  String   @map("game_name")
+  minBet    Int      @map("min_bet")
+  maxBet    Int      @map("max_bet")
+  currency  String
+  status    String   @default("Unfreeze")
+  machineId String?  @map("machine_id") @db.Uuid
+  machine   Machine? @relation(fields: [machineId], references: [id])
 }

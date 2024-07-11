@@ -20,6 +20,7 @@ import {
   RolesGuard,
   UserType,
   Roles,
+  AccessGuard,
 } from '@Common';
 import { UsersService } from './users.service';
 import {
@@ -28,11 +29,12 @@ import {
   UpdateProfileDetailsRequestDto,
   UpdateProfileImageRequestDto,
   UpdateUserProfileRequestDto,
+  userFreezeDto,
 } from './dto';
 
 @ApiTags('User')
 @ApiBearerAuth()
-//@UseGuards(JwtAuthGuard, AccessGuard)
+@UseGuards(JwtAuthGuard, AccessGuard)
 @UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController extends BaseController {
@@ -163,6 +165,14 @@ export class UsersController extends BaseController {
   ) {
     console.log('This is userid', userId);
     await this.usersService.setStatus(userId, status);
+    return { status: 'success' };
+  }
+
+  @Patch('freeze')
+  async freeze(@Req() req: AuthenticatedRequest, @Body() data: userFreezeDto) {
+    const ctx = this.getContext(req);
+    const type = ctx.user.type;
+    await this.usersService.freeze(data.id, data.status, type);
     return { status: 'success' };
   }
 }

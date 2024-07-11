@@ -1,13 +1,15 @@
 import { join } from 'path';
 import { Cache } from 'cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   Admin,
   AdminMeta,
   AdminStatus,
-  CreateRoom,
+  Machine,
+  Prisma,
+  Room,
   User,
 } from '@prisma/client';
 import { adminConfigFactory } from '@Config';
@@ -269,6 +271,8 @@ export class AdminService {
       const { salt, hash } = this.hashPassword(password);
       passwordSalt = salt;
       passwordHash = hash;
+      console.log('THis is password salt', passwordSalt);
+      console.log('This is passwordHash', passwordHash);
     }
 
     return await this.prisma.user.create({
@@ -525,8 +529,8 @@ export class AdminService {
     maxBet: number,
     rtp: number,
     currency: string,
-  ): Promise<CreateRoom> {
-    return await this.prisma.createRoom.create({
+  ): Promise<Room> {
+    return await this.prisma.room.create({
       data: {
         roomName,
         noOfMachines,
@@ -539,6 +543,44 @@ export class AdminService {
         currency,
       },
     });
+  }
+
+  async createMachine(
+    machineNo: string,
+    balance: number,
+    roomId?: string,
+  ): Promise<Machine> {
+    let data: Prisma.MachineCreateInput = {
+      machineNo,
+      balance,
+    };
+
+    if (roomId) {
+      const room = await this.prisma.room.findUnique({
+        where: {
+          id: roomId,
+        },
+      });
+      console.log('THis is room', room);
+      if (!room) {
+        throw new NotFoundException('Room not found');
+      }
+
+      data = {
+        ...data,
+        room: {
+          connect: {
+            id: roomId,
+          },
+        },
+      };
+    }
+
+    const result = await this.prisma.machine.create({
+      data,
+    });
+
+    return result;
   }
 
   async getMasterList(
@@ -676,6 +718,108 @@ export class AdminService {
       });
 
       return { users, total };
+    }
+  }
+  async getRoomList(
+    search?: string,
+    skip?: number,
+    take?: number,
+  ): Promise<{ rooms: Room[]; total?: number }> {
+    if (search) {
+      const rooms = await this.prisma.room.findMany({
+        where: {
+          roomName: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        skip: skip,
+        take: take,
+      });
+
+      const total = await this.prisma.room.count({
+        where: {
+          roomName: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+      });
+      if (!rooms) {
+        return { rooms: [] };
+      }
+      return { rooms, total };
+    } else {
+      const total = await this.prisma.room.count();
+
+      const rooms = await this.prisma.room.findMany({
+        skip: skip,
+        take: take,
+      });
+
+      return { rooms, total };
+    }
+  }
+  async getMachineList(
+    search?: string,
+    skip?: number,
+    take?: number,
+  ): Promise<{ machines: Machine[]; total?: number }> {
+    if (search) {
+      const machines = await this.prisma.machine.findMany({
+        where: {
+          machineNo: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+        skip: skip,
+        take: take,
+      });
+
+      const total = await this.prisma.machine.count({
+        where: {
+          machineNo: {
+            contains: search,
+            mode: 'insensitive',
+          },
+        },
+      });
+      if (!machines) {
+        return { machines: [] };
+      }
+      return { machines, total };
+    } else {
+      const total = await this.prisma.machine.count();
+
+      const machines = await this.prisma.machine.findMany({
+        skip: skip,
+        take: take,
+      });
+
+      return { machines, total };
+    }
+  }
+
+  async unfreeze(
+    id: string,
+    status: string,
+    machineNo?: string,
+    roomName?: string,
+  ): Promise<Machine | Room> {
+    if (roomName) {
+      const room = await this.prisma.room.update({
+        where: { id: id },
+        data: { status: status },
+      });
+
+      return room;
+    } else {
+      const machine = await this.prisma.machine.update({
+        where: { id: id },
+        data: { status: status },
+      });
+      return machine;
     }
   }
 }

@@ -3,8 +3,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import {
   Admin,
+  Machine,
   OtpTransport,
   Prisma,
+  Room,
   User,
   UserMeta,
   UserStatus,
@@ -634,5 +636,29 @@ export class UsersService {
       take: pagination.take,
       data: response,
     };
+  }
+
+  async freeze(
+    id: string,
+    status: string,
+    usertype: string,
+  ): Promise<Machine | Room> {
+    if (usertype === 'MANAGER' && status == 'freeze') {
+      const entity = await this.prisma.room.update({
+        where: { id: id },
+        data: { status: status },
+      });
+
+      return entity;
+    }
+    if (usertype == 'WORKER' && status == 'freeze') {
+      const entity = await this.prisma.machine.update({
+        where: { id: id },
+        data: { status: status },
+      });
+      return entity;
+    } else {
+      throw new Error('You are not allowed to do this action');
+    }
   }
 }
