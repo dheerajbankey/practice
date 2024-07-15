@@ -1,17 +1,12 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, IsUUID } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsInt, IsString } from 'class-validator';
 
 export class createMachineDto {
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsString()
   machineNo: string;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsInt()
   balance: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsUUID()
-  roomId?: string;
 }

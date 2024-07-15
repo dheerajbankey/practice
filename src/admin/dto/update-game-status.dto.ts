@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsUUID } from 'class-validator';
+import { IsString } from 'class-validator';
 
-export class userFreezeDto {
+export class updateGameStatusDto {
   @ApiProperty()
-  @IsUUID()
-  id: string;
+  @IsString()
+  gameId: string;
 
   @ApiProperty()
   @IsString()

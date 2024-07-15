@@ -1,45 +1,45 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsString } from 'class-validator';
 
 export class createRoomDto {
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsString()
   roomName: string;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsInt()
   noOfMachines: number;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsInt()
   //@Min(0)
   noOfSpins: number;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsInt()
   //@Max()
   minJackpot: number;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsInt()
   //@Max(1000)
   maxJackpot: number;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsInt()
   //@Max(1000)
   minBet: number;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsInt()
   //@Max(1000)
   maxBet: number;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsInt()
   rtp: number;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @IsString()
   currency: string;
 }

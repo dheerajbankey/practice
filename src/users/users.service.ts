@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import {
   Admin,
@@ -644,19 +644,28 @@ export class UsersService {
     usertype: string,
   ): Promise<Machine | Room> {
     if (usertype === 'MANAGER' && status == 'freeze') {
-      const entity = await this.prisma.room.update({
+      const roomId = await this.prisma.room.findUnique({
+        where: { id: id },
+      });
+      if (!roomId) {
+        throw new NotFoundException('Room not found');
+      }
+      return await this.prisma.room.update({
         where: { id: id },
         data: { status: status },
       });
-
-      return entity;
     }
     if (usertype == 'WORKER' && status == 'freeze') {
-      const entity = await this.prisma.machine.update({
+      const userId = await this.prisma.machine.findUnique({
+        where: { id: id },
+      });
+      if (!userId) {
+        throw new NotFoundException('Machine not found');
+      }
+      return await this.prisma.machine.update({
         where: { id: id },
         data: { status: status },
       });
-      return entity;
     } else {
       throw new Error('You are not allowed to do this action');
     }

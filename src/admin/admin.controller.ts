@@ -35,9 +35,18 @@ import {
   updateStatusDto,
   createMachineDto,
   getMachineListDto,
-  userFreezeDto,
+  allotManagerDto,
+  addGameDto,
+  addWorkerDto,
+  userUnFreezeDto,
+  createGameDto,
+  getRoomMachinesDto,
+  getMachineGamesDto,
+  updateGameStatusDto,
+  addMinMaxGameBetDto,
 } from './dto';
 import { getRoomListDto } from './dto/get-room-list.dto';
+import { addMachineDto } from './dto/add-machine-dto';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
@@ -161,10 +170,28 @@ export class AdminController extends BaseController {
     );
     return { status: result };
   }
+  @Patch('unfreeze')
+  async unfreeze(
+    @Req() req: AuthenticatedRequest,
+    @Body() data: userUnFreezeDto,
+  ) {
+    await this.adminService.unfreeze(
+      data.id,
+      data.status,
+      data.machineNo,
+      data.roomName,
+    );
+    return { status: 'success' };
+  }
 
+  @Patch('update-game-status')
+  async updateGameStatus(@Body() data: updateGameStatusDto) {
+    await this.adminService.updateGameStatus(data.gameId, data.status);
+    return { status: 'success' };
+  }
   @Post('create-room')
   async createRoom(@Body() data: createRoomDto) {
-    return await this.adminService.createRoom(
+    await this.adminService.createRoom(
       data.roomName,
       data.noOfMachines,
       data.noOfSpins,
@@ -175,15 +202,19 @@ export class AdminController extends BaseController {
       data.rtp,
       data.currency,
     );
+    return { status: 'success' };
   }
 
   @Post('create-machine')
   async createMachine(@Body() data: createMachineDto) {
-    return await this.adminService.createMachine(
-      data.machineNo,
-      data.balance,
-      data.roomId,
-    );
+    await this.adminService.createMachine(data.machineNo, data.balance);
+    return { status: 'success' };
+  }
+
+  @Post('create-game')
+  async createGame(@Body() data: createGameDto) {
+    await this.adminService.createGame(data.gameName, data.currency);
+    return { status: 'success' };
   }
 
   @Get('get-manager-list')
@@ -228,14 +259,46 @@ export class AdminController extends BaseController {
     return await this.adminService.getMachineList(search, skip, take);
   }
 
-  @Patch('unfreeze')
-  async freeze(@Req() req: AuthenticatedRequest, @Body() data: userFreezeDto) {
-    await this.adminService.unfreeze(
-      data.id,
-      data.status,
-      data.machineNo,
-      data.roomName,
+  @Post('alot-manager')
+  async alotManager(@Body() data: allotManagerDto) {
+    await this.adminService.alotManager(data.roomId, data.userId);
+    return { status: 'success' };
+  }
+
+  @Post('add-machine')
+  async alotMachine(@Body() data: addMachineDto) {
+    await this.adminService.addMachine(data.roomId, data.machineId);
+    return { status: 'success' };
+  }
+
+  @Post('add-game')
+  async addGame(@Body() data: addGameDto) {
+    await this.adminService.addGame(data.machineId, data.gameId, data.roomName);
+    return { status: 'success' };
+  }
+
+  @Post('add-worker')
+  async addWorker(@Body() data: addWorkerDto) {
+    await this.adminService.addWorker(data.machineId, data.userId);
+    return { status: 'success' };
+  }
+
+  @Post('add-gamebet-amount')
+  async addGameBetAmount(@Body() data: addMinMaxGameBetDto) {
+    await this.adminService.addGameBetAmount(
+      data.gameId,
+      data.minBet,
+      data.maxBet,
     );
     return { status: 'success' };
+  }
+  @Get('get-room-machines')
+  async getRoomMachines(@Query() query: getRoomMachinesDto) {
+    return await this.adminService.getRoomMachines(query.roomId);
+  }
+
+  @Get('get-machine-game')
+  async getMachineGame(@Query() query: getMachineGamesDto) {
+    return await this.adminService.getMachinesGames(query.machineId);
   }
 }

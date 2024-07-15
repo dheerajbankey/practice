@@ -195,6 +195,7 @@ model Machine {
   status    String  @default("Unfreeze")
   user      User[]
   room      Room?   @relation(fields: [rooomId], references: [id])
+  roomName  String? @map("room_name")
   rooomId   String? @map("room_id") @db.Uuid
   games     Game[]
 
@@ -204,10 +205,11 @@ model Machine {
 model Game {
   id        String   @id @default(uuid()) @db.Uuid
   gameName  String   @map("game_name")
-  minBet    Int      @map("min_bet")
-  maxBet    Int      @map("max_bet")
+  minBet    Int?     @default(0) @map("min_bet")
+  maxBet    Int?     @default(0) @map("max_bet")
   currency  String
-  status    String   @default("Unfreeze")
+  status    String   @default("Enable")
+  roomName  String?  @map("room_name")
   machineId String?  @map("machine_id") @db.Uuid
   machine   Machine? @relation(fields: [machineId], references: [id])
 }

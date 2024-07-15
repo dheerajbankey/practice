@@ -46,8 +46,12 @@ async function bootstrap() {
           `^http[s]{0,1}://(?:${appConfig.domain}|[a-z0-9-]+.${appConfig.domain})$`,
         ),
         new RegExp('^http[s]{0,1}://localhost(:[0-9]+)?$'),
+        'capacitor-electron://-',
       ]
-    : [new RegExp('^http[s]{0,1}://localhost(:[0-9]+)?$')];
+    : [
+        new RegExp('^http[s]{0,1}://localhost(:[0-9]+)?$'),
+        'capacitor-electron://-',
+      ];
 
   app.useGlobalPipes(
     new ValidationPipe({

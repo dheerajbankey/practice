@@ -1,12 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsUUID } from 'class-validator';
 
-export class userFreezeDto {
-  @ApiProperty()
-  @IsUUID()
-  id: string;
-
+export class allotManagerDto {
   @ApiProperty()
   @IsString()
-  status: string;
+  roomId: string;
+
+  @ApiProperty()
+  @IsUUID()
+  userId: string;
 }

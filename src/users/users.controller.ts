@@ -35,7 +35,6 @@ import {
 @ApiTags('User')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, AccessGuard)
-@UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController extends BaseController {
   constructor(private readonly usersService: UsersService) {
@@ -172,6 +171,7 @@ export class UsersController extends BaseController {
   async freeze(@Req() req: AuthenticatedRequest, @Body() data: userFreezeDto) {
     const ctx = this.getContext(req);
     const type = ctx.user.type;
+    console.log('THis is type', type);
     await this.usersService.freeze(data.id, data.status, type);
     return { status: 'success' };
   }

@@ -7,8 +7,9 @@ import {
   Admin,
   AdminMeta,
   AdminStatus,
+  Game,
   Machine,
-  Prisma,
+  //Prisma,
   Room,
   User,
 } from '@prisma/client';
@@ -271,15 +272,13 @@ export class AdminService {
       const { salt, hash } = this.hashPassword(password);
       passwordSalt = salt;
       passwordHash = hash;
-      console.log('THis is password salt', passwordSalt);
-      console.log('This is passwordHash', passwordHash);
     }
 
     return await this.prisma.user.create({
       data: {
         firstname: firstname,
         lastname: lastname,
-        username: username,
+        email: username,
         usertype: usertype,
         currency: currency,
 
@@ -397,11 +396,11 @@ export class AdminService {
     });
 
     if (!user) {
-      throw new Error(`User not found`);
+      throw new NotFoundException('User not found');
     }
 
     if (!admin) {
-      throw new Error(`Admin not found`);
+      throw new NotFoundException('Admin not found');
     }
 
     const balanceToUpdate = admin.balance === null ? 0 : admin.balance;
@@ -519,6 +518,60 @@ export class AdminService {
     }
   }
 
+  async updateGameStatus(gameId: string, status: string): Promise<Game> {
+    const game = await this.prisma.game.findUnique({
+      where: {
+        id: gameId,
+      },
+    });
+    if (!game) {
+      throw new NotFoundException('Game not found');
+    }
+    return await this.prisma.game.update({
+      where: {
+        id: gameId,
+      },
+      data: {
+        status: status,
+      },
+    });
+  }
+  async unfreeze(
+    id: string,
+    status: string,
+    machineNo?: string,
+    roomName?: string,
+  ): Promise<Machine | Room> {
+    if (roomName) {
+      const room = await this.prisma.room.findUnique({
+        where: {
+          id: id,
+        },
+      });
+      if (!room) {
+        throw new NotFoundException('Room not found');
+      } else {
+        return await this.prisma.room.update({
+          where: { id: id, roomName: roomName },
+          data: { status: status },
+        });
+      }
+    } else {
+      const machine = await this.prisma.machine.findUnique({
+        where: {
+          id: id,
+        },
+      });
+      if (!machine) {
+        throw new NotFoundException('Machine not found');
+      } else {
+        return await this.prisma.machine.update({
+          where: { id: id, machineNo: machineNo },
+          data: { status: status },
+        });
+      }
+    }
+  }
   async createRoom(
     roomName: string,
     noOfMachines: number,
@@ -545,44 +598,63 @@ export class AdminService {
     });
   }
 
-  async createMachine(
-    machineNo: string,
-    balance: number,
-    roomId?: string,
-  ): Promise<Machine> {
-    let data: Prisma.MachineCreateInput = {
-      machineNo,
-      balance,
-    };
+  // async createMachine(
+  //   machineNo: string,
+  //   balance: number,
+  //   roomName: string,
+  //   roomId?: string,
+  // ): Promise<Machine> {
+  //   let data: Prisma.MachineCreateInput = {
+  //     machineNo,
+  //     balance,
+  //     roomName,
+  //   };
 
-    if (roomId) {
-      const room = await this.prisma.room.findUnique({
-        where: {
-          id: roomId,
-        },
-      });
-      console.log('THis is room', room);
-      if (!room) {
-        throw new NotFoundException('Room not found');
-      }
+  //   if (roomId) {
+  //     const room = await this.prisma.room.findUnique({
+  //       where: {
+  //         id: roomId,
+  //       },
+  //     });
+  //     if (!room) {
+  //       throw new NotFoundException('Room not found');
+  //     }
 
-      data = {
-        ...data,
-        room: {
-          connect: {
-            id: roomId,
-          },
-        },
-      };
-    }
+  //     data = {
+  //       ...data,
+  //       room: {
+  //         connect: {
+  //           id: roomId,
+  //         },
+  //       },
+  //     };
+  //   }
 
-    const result = await this.prisma.machine.create({
-      data,
+  //   const result = await this.prisma.machine.create({
+  //     data,
+  //   });
+
+  //   return result;
+  // }
+
+  // eslint-disable-next-line prettier/prettier
+  async createMachine(machineNo: string, balance: number): Promise<Machine> {
+    return await this.prisma.machine.create({
+      data: {
+        machineNo,
+        balance,
+      },
     });
-
-    return result;
   }
 
+  async createGame(gameName: string, currency: string): Promise<Game> {
+    return await this.prisma.game.create({
+      data: {
+        gameName,
+        currency,
+      },
+    });
+  }
   async getMasterList(
     userType?: string,
     search?: string,
@@ -801,25 +873,183 @@ export class AdminService {
     }
   }
 
-  async unfreeze(
-    id: string,
-    status: string,
-    machineNo?: string,
-    roomName?: string,
-  ): Promise<Machine | Room> {
-    if (roomName) {
-      const room = await this.prisma.room.update({
-        where: { id: id },
-        data: { status: status },
-      });
-
-      return room;
-    } else {
-      const machine = await this.prisma.machine.update({
-        where: { id: id },
-        data: { status: status },
-      });
-      return machine;
+  async alotManager(roomId: string, userId: string) {
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+    });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        usertype: true,
+      },
+    });
+    if (!room && !user) {
+      throw new NotFoundException('Room and Manager not found');
     }
+    if (user?.usertype !== 'MANAGER') {
+      throw new Error('Usertype is not valid');
+    }
+    const updatedRoom = await this.prisma.room.update({
+      where: { id: roomId },
+      data: {
+        room: {
+          connect: { id: userId },
+        },
+      },
+    });
+
+    return updatedRoom;
+  }
+
+  async addMachine(roomId: string, machineId: string) {
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+      select: {
+        roomName: true,
+      },
+    });
+    const machineID = await this.prisma.machine.findUnique({
+      where: { id: machineId },
+    });
+    if (!room && !machineID) {
+      throw new NotFoundException('Room and Machine not found');
+    }
+    const updatedRoom = await this.prisma.room.update({
+      where: { id: roomId },
+      data: {
+        machine: {
+          connect: { id: machineId },
+        },
+      },
+    });
+
+    await this.prisma.machine.update({
+      where: { id: machineId },
+      data: {
+        roomName: room?.roomName,
+      },
+    });
+
+    return updatedRoom;
+  }
+
+  async addGame(machineId: string, gameId: string, roomName: string) {
+    const machine = await this.prisma.machine.findUnique({
+      where: { id: machineId },
+      select: {
+        rooomId: true,
+      },
+    });
+    const game = await this.prisma.game.findUnique({
+      where: { id: gameId },
+    });
+    if (!machine && !game) {
+      throw new NotFoundException('Machine and Game not found');
+    }
+    await this.prisma.game.update({
+      where: { id: gameId },
+      data: {
+        roomName: roomName,
+      },
+    });
+    const updatedMachine = await this.prisma.machine.update({
+      where: { id: machineId },
+      data: {
+        games: {
+          connect: { id: gameId },
+        },
+      },
+    });
+
+    return updatedMachine;
+  }
+  async addWorker(machineId: string, userId: string) {
+    const machine = await this.prisma.machine.findUnique({
+      where: { id: machineId },
+    });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        usertype: true,
+      },
+    });
+    if (!machine && !user) {
+      throw new NotFoundException('Machine and User not found');
+    }
+    if (user?.usertype !== 'WORKER') {
+      throw new Error('UserType is not valid');
+    }
+    const updatedMachine = await this.prisma.machine.update({
+      where: { id: machineId },
+      data: {
+        user: {
+          connect: { id: userId },
+        },
+      },
+    });
+
+    return updatedMachine;
+  }
+
+  async addGameBetAmount(
+    gameId: string,
+    min: number,
+    max: number,
+  ): Promise<Game> {
+    console.log('THis is gameid,min,max', gameId, min, max);
+    const game = await this.prisma.game.findUnique({
+      where: {
+        id: gameId,
+      },
+    });
+    if (!game) {
+      throw new NotFoundException('Game not found');
+    }
+
+    const result = await this.prisma.game.update({
+      where: {
+        id: gameId,
+      },
+      data: {
+        minBet: min,
+        maxBet: max,
+      },
+    });
+    return result;
+  }
+  async getRoomMachines(
+    roomId: string,
+  ): Promise<{ machines: Machine[]; total?: number }> {
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Room not found');
+    }
+
+    const machines = await this.prisma.machine.findMany({
+      where: { rooomId: roomId },
+    });
+
+    return { machines, total: machines.length };
+  }
+
+  async getMachinesGames(
+    machineId: string,
+  ): Promise<{ games: Game[]; total?: number }> {
+    const room = await this.prisma.machine.findUnique({
+      where: { id: machineId },
+    });
+
+    if (!room) {
+      throw new NotFoundException('Machine not found');
+    }
+
+    const games = await this.prisma.game.findMany({
+      where: { machineId: machineId },
+    });
+
+    return { games, total: games.length };
   }
 }
