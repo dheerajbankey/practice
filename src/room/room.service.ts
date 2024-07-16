@@ -374,7 +374,6 @@ export class RoomService {
       skip: skip,
       take: take,
     });
-
     return { games, total: games.length, skip, take };
   }
 }
