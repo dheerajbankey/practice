@@ -1,7 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 
-export class getRoomListDto {
+export class getMachineGamesDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsUUID()
+  machineId?: string;
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

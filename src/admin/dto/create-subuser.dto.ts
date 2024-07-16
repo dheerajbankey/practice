@@ -1,5 +1,7 @@
+import { UserType } from '@Common';
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  IsEnum,
   //IsEmail,
   IsNotEmpty,
   //   IsNumber,
@@ -29,9 +31,8 @@ export class createUserRequestDto {
   password: string;
 
   @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
-  usertype: string;
+  @IsEnum(UserType)
+  usertype: UserType;
 
   @ApiProperty()
   @IsString()

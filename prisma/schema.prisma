@@ -16,6 +16,29 @@ enum AdminStatus {
   @@map("admin_status")
 }
 
+enum UserType {
+  Admin   @map("admin")
+  Manager @map("manager")
+  Worker  @map("worker")
+  User    @map("user")
+
+  @@map("user_type")
+}
+
+enum GameStatus {
+  Enable  @map("enable")
+  Disable @map("disable")
+
+  @@map("game_status")
+}
+
+enum Status {
+  Freeze   @map("freeze")
+  Unfreeze @map("unfreeze")
+
+  @@map("status")
+}
+
 model Admin {
   id           String      @id @default(uuid()) @db.Uuid
   firstname    String
@@ -63,7 +86,7 @@ model User {
   updatedAt    DateTime      @updatedAt @map("updated_at")
   meta         UserMeta?
   settings     UserSetting[]
-  usertype     String?       @map("usertype")
+  userType     UserType      @map("usertype")
   credit       Int?
   balance      Int?          @default(0)
   currency     String?
@@ -181,7 +204,7 @@ model Room {
   maxBet       Int       @map("max_bet")
   rtp          Int
   currency     String
-  status       String    @default("Unfreeze")
+  status       Status    @default(Unfreeze)
   room         User[]
   machine      Machine[]
 
@@ -192,7 +215,7 @@ model Machine {
   id        String  @id @default(uuid()) @db.Uuid
   machineNo String
   balance   Int
-  status    String  @default("Unfreeze")
+  status    Status  @default(Unfreeze)
   user      User[]
   room      Room?   @relation(fields: [rooomId], references: [id])
   roomName  String? @map("room_name")
@@ -203,13 +226,13 @@ model Machine {
 }
 
 model Game {
-  id        String   @id @default(uuid()) @db.Uuid
-  gameName  String   @map("game_name")
-  minBet    Int?     @default(0) @map("min_bet")
-  maxBet    Int?     @default(0) @map("max_bet")
+  id        String     @id @default(uuid()) @db.Uuid
+  gameName  String     @map("game_name")
+  minBet    Int?       @default(0) @map("min_bet")
+  maxBet    Int?       @default(0) @map("max_bet")
   currency  String
-  status    String   @default("Enable")
-  roomName  String?  @map("room_name")
-  machineId String?  @map("machine_id") @db.Uuid
-  machine   Machine? @relation(fields: [machineId], references: [id])
+  status    GameStatus @default(Enable)
+  roomName  String?    @map("room_name")
+  machineId String?    @map("machine_id") @db.Uuid
+  machine   Machine?   @relation(fields: [machineId], references: [id])
 }

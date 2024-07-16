@@ -64,13 +64,14 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new AllExceptionsFilter(app.get(HttpAdapterHost)));
   app.enableCors({
-    origin: utilsService.isProductionApp()
-      ? origins
-      : [
-          'null',
-          new RegExp(`^http[s]{0,1}://(?:127.0.0.1|localhost)(:[0-9]+)*$`),
-          ...origins,
-        ],
+    origin:
+      '*' && utilsService.isProductionApp()
+        ? origins
+        : [
+            'null',
+            new RegExp(`^http[s]{0,1}://(?:127.0.0.1|localhost)(:[0-9]+)*$`),
+            ...origins,
+          ],
     credentials: true,
   });
   app.use(cookieParser());

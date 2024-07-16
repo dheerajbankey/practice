@@ -9,6 +9,9 @@ import { AppController } from './app.controller';
 import { AppCacheInterceptor } from './app-cache.interceptor';
 import { PrismaModule } from './prisma';
 import { AuthModule } from './auth';
+import { RoomModule } from './room';
+import { GameModule } from './game';
+import { MachineModule } from './machine';
 import { RedisModule } from './redis';
 
 @Module({
@@ -26,6 +29,9 @@ import { RedisModule } from './redis';
     PrismaModule,
     RedisModule,
     AuthModule,
+    RoomModule,
+    GameModule,
+    MachineModule,
   ],
   controllers: [AppController],
   providers: [

@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Status } from '@prisma/client';
 import { IsOptional, IsString } from 'class-validator';
 
 export class userUnFreezeDto {
@@ -18,5 +19,5 @@ export class userUnFreezeDto {
 
   @ApiProperty()
   @IsString()
-  status: string;
+  status: Status;
 }
