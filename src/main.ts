@@ -65,7 +65,7 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter(app.get(HttpAdapterHost)));
   app.enableCors({
     origin:
-      '*' && utilsService.isProductionApp()
+      '*' || utilsService.isProductionApp()
         ? origins
         : [
             'null',
