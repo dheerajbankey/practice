@@ -46,8 +46,12 @@ async function bootstrap() {
           `^http[s]{0,1}://(?:${appConfig.domain}|[a-z0-9-]+.${appConfig.domain})$`,
         ),
         new RegExp('^http[s]{0,1}://localhost(:[0-9]+)?$'),
+        'capacitor-electron://-',
       ]
-    : [new RegExp('^http[s]{0,1}://localhost(:[0-9]+)?$')];
+    : [
+        new RegExp('^http[s]{0,1}://localhost(:[0-9]+)?$'),
+        'capacitor-electron://-',
+      ];
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -60,13 +64,14 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new AllExceptionsFilter(app.get(HttpAdapterHost)));
   app.enableCors({
-    origin: utilsService.isProductionApp()
-      ? origins
-      : [
-          'null',
-          new RegExp(`^http[s]{0,1}://(?:127.0.0.1|localhost)(:[0-9]+)*$`),
-          ...origins,
-        ],
+    origin:
+      '*' && utilsService.isProductionApp()
+        ? origins
+        : [
+            'null',
+            new RegExp(`^http[s]{0,1}://(?:127.0.0.1|localhost)(:[0-9]+)*$`),
+            ...origins,
+          ],
     credentials: true,
   });
   app.use(cookieParser());

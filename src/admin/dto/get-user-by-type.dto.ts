@@ -1,26 +1,10 @@
+import { SearchablePaginatedDto, UserType } from '@Common';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsEnum, IsOptional } from 'class-validator';
 
-export class getUserByTypeDto {
+export class getUserByTypeDto extends SearchablePaginatedDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
-  userType?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  search?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  skip?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsInt()
-  @Max(1000)
-  take?: number;
+  @IsEnum(UserType)
+  userType?: UserType;
 }

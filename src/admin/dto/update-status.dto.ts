@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { UserStatus } from '@prisma/client';
+import { IsEnum, IsString } from 'class-validator';
 
 export class updateStatusDto {
   @ApiPropertyOptional()
@@ -8,5 +9,6 @@ export class updateStatusDto {
 
   @ApiPropertyOptional()
   @IsString()
-  status: string;
+  @IsEnum(UserStatus)
+  status: UserStatus;
 }

@@ -125,6 +125,7 @@ export class AuthService {
     country: string;
     emailVerificationCode: string;
     mobileVerificationCode?: string;
+    userType: UserType;
   }): Promise<InvalidVerifyCodeResponse | ValidAuthResponse> {
     const [verifyEmailOtpResponse, verifyMobileOtpResponse] = await Promise.all(
       [
@@ -159,6 +160,7 @@ export class AuthService {
       dialCode: data.dialCode,
       mobile: data.mobile,
       country: data.country,
+      userType: data.userType,
     });
     return {
       accessToken: this.generateJwt({
