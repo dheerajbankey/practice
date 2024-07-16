@@ -272,7 +272,7 @@ export class UsersService {
 
   async getProfile(userId: string, type?: string): Promise<any> {
     let user;
-    if (type !== 'admin') {
+    if (type !== UserType.Admin) {
       user = await this.getById(userId);
       if (user.profileImage) {
         user.profileImage = this.getProfileImageUrl(user.profileImage);

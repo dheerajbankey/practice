@@ -124,7 +124,6 @@ export class AdminController extends BaseController {
     await this.adminService.addAmount(userId, amount, adminId);
     return { status: 'success' };
   }
-
   @Post('remove-amount/:userId/:amount')
   async removeAmount(
     @Req() req: AuthenticatedRequest,
@@ -136,7 +135,6 @@ export class AdminController extends BaseController {
     await this.adminService.removeAmount(userId, amount, adminId);
     return { status: 'success' };
   }
-
   @Post('updatestatus')
   async updateStatus(@Body() data: updateStatusDto) {
     const result = await this.adminService.updateStatus(
