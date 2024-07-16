@@ -113,11 +113,6 @@ export class AdminController extends BaseController {
     );
   }
 
-  // @Get('get-all-user')
-  // async getDetails(@Query() query: getUserByTypeDto) {
-  //   return await this.adminService.getUsersByType(query);
-  // }
-
   @Post('add-amount/:userId/:amount')
   async addAmount(
     @Req() req: AuthenticatedRequest,

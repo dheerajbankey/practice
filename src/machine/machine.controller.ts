@@ -2,6 +2,9 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
+  ParseUUIDPipe,
   Post,
   Query,
   Req,
@@ -52,5 +55,29 @@ export class MachineController extends BaseController {
       skip: query.skip,
       take: query.take,
     });
+  }
+
+  @Post('add-amount/:machineId/:amount')
+  async addAmount(
+    @Req() req: AuthenticatedRequest,
+    @Param('machineId', ParseUUIDPipe) machineId: string,
+    @Param('amount', ParseIntPipe) amount: number,
+  ) {
+    const ctx = this.getContext(req);
+    const adminId = ctx.user.id;
+    await this.machineService.addAmount(machineId, amount, adminId);
+    return { status: 'success' };
+  }
+
+  @Post('remove-amount/:machineId/:amount')
+  async removeAmount(
+    @Req() req: AuthenticatedRequest,
+    @Param('machineId', ParseUUIDPipe) machineId: string,
+    @Param('amount', ParseIntPipe) amount: number,
+  ) {
+    const ctx = this.getContext(req);
+    const adminId = ctx.user.id;
+    await this.machineService.removeAmount(machineId, amount, adminId);
+    return { status: 'success' };
   }
 }
