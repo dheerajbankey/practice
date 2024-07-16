@@ -1,14 +1,19 @@
 import { join } from 'path';
 import { Cache } from 'cache-manager';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   Admin,
   AdminMeta,
   AdminStatus,
-  CreateRoom,
+  Machine,
+  Prisma,
+  //Prisma,
+  Room,
+  Status,
   User,
+  UserStatus,
 } from '@prisma/client';
 import { adminConfigFactory } from '@Config';
 import {
@@ -80,6 +85,14 @@ export class AdminService {
     return await this.prisma.admin.findUniqueOrThrow({
       where: {
         id: adminId,
+      },
+    });
+  }
+
+  async getByUserId(userId: string): Promise<User> {
+    return await this.prisma.user.findUniqueOrThrow({
+      where: {
+        id: userId,
       },
     });
   }
@@ -250,13 +263,13 @@ export class AdminService {
     lastname: string,
     username: string,
     password: string,
-    usertype: string,
+    usertype: UserType,
     currency: string,
   ) {
     if (await this.isUsernameExist(username)) {
       throw new Error('Username already exist');
     }
-    const validUserTypes = ['MANAGER', 'WORKER'];
+    const validUserTypes = ['Manager', 'Worker'];
     console.log('usertype', username, usertype);
 
     if (!validUserTypes.includes(usertype)) {
@@ -276,7 +289,7 @@ export class AdminService {
         firstname: firstname,
         lastname: lastname,
         username: username,
-        usertype: usertype,
+        userType: usertype,
         currency: currency,
 
         meta: {
@@ -288,117 +301,13 @@ export class AdminService {
       },
     });
   }
-
-  async getUserByType(
-    usertype: string,
-    search: string,
-    skip: number,
-    take: number,
-  ): Promise<{ users: User[]; total?: number }> {
-    if (search) {
-      const users = await this.prisma.user.findMany({
-        where: {
-          username: {
-            contains: search,
-            mode: 'insensitive',
-          },
-        },
-      });
-      const total = await this.prisma.user.count({
-        where: {
-          username: {
-            contains: search,
-            mode: 'insensitive',
-          },
-        },
-      });
-
-      if (!users) {
-        return { users: [] };
-      }
-
-      return { users, total };
-    } else {
-      const total = await this.prisma.user.count({
-        where: { usertype },
-      });
-
-      const users = await this.prisma.user.findMany({
-        where: { usertype },
-        skip: skip,
-        take: take,
-      });
-
-      return { users, total };
-    }
-  }
-  // async addAmount(
-  //   userId: string,
-  //   amount: number,
-  //   adminId: string,
-  // ): Promise<User> {
-  //   const user = await this.prisma.user.findUnique({
-  //     where: {
-  //       id: userId,
-  //     },
-  //   });
-
-  //   if (!user) {
-  //     throw new Error(`User not found`);
-  //   }
-  //   const admin = await this.prisma.admin.findUnique({
-  //     where: {
-  //       id: adminId,
-  //     },
-  //   });
-  //   const balanceToUpdate = admin.balance === null ? 0 : admin.balance;
-  //   if (amount < balanceToUpdate) {
-  //     await this.prisma.admin.update({
-  //       where: {
-  //         id: adminId,
-  //       },
-  //       data: {
-  //         balance: {
-  //           decrement: amount,
-  //         },
-  //       },
-  //     });
-  //     const updatedAmount = await this.prisma.user.update({
-  //       where: {
-  //         id: userId,
-  //       },
-  //       data: {
-  //         balance: {
-  //           set: balanceToUpdate + amount,
-  //         },
-  //       },
-  //     });
-  //     return updatedAmount;
-  //   }
-  // }
   async addAmount(
     userId: string,
     amount: number,
     adminId: string,
   ): Promise<User> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-    const admin = await this.prisma.admin.findUnique({
-      where: {
-        id: adminId,
-      },
-    });
-
-    if (!user) {
-      throw new Error(`User not found`);
-    }
-
-    if (!admin) {
-      throw new Error(`Admin not found`);
-    }
+    const user = await this.getByUserId(userId);
+    const admin = await this.getById(adminId);
 
     const balanceToUpdate = admin.balance === null ? 0 : admin.balance;
     const newAdminBalance = balanceToUpdate - amount;
@@ -435,15 +344,8 @@ export class AdminService {
     amount: number,
     adminId: string,
   ): Promise<User> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-
-    if (!user) {
-      throw new Error(`User not found`);
-    }
+    const user = await this.getByUserId(userId);
+    const admin = await this.getById(adminId);
     const balanceToUpdate = user.balance === null ? 0 : user.balance;
     if (balanceToUpdate == 0 || balanceToUpdate < amount) {
       throw new Error('Insufficient Amount');
@@ -460,7 +362,7 @@ export class AdminService {
     });
     await this.prisma.admin.update({
       where: {
-        id: adminId,
+        id: admin.id,
       },
       data: {
         balance: {
@@ -470,212 +372,127 @@ export class AdminService {
     });
     return updatedAmount;
   }
-
-  async updateStatus(userId: string, status: string): Promise<boolean> {
+  async updateStatus(userId: string, status: UserStatus): Promise<string> {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId,
       },
     });
-
     if (!user) {
       throw new Error(`User not found`);
     }
-
-    if (status === 'Block') {
-      if (user.status === 'Active') {
-        await this.prisma.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            status: 'Blocked',
-          },
-        });
-        return true;
-      } else {
-        return false;
-      }
-    } else if (status === 'UnBlock') {
-      if (user.status === 'Blocked') {
-        await this.prisma.user.update({
-          where: {
-            id: userId,
-          },
-          data: {
-            status: 'Active',
-          },
-        });
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      throw new Error(`Invalid status: ${status}`);
-    }
-  }
-
-  async createRoom(
-    roomName: string,
-    noOfMachines: number,
-    noOfSpins: number,
-    minJackpot: number,
-    maxJackpot: number,
-    minBet: number,
-    maxBet: number,
-    rtp: number,
-    currency: string,
-  ): Promise<CreateRoom> {
-    return await this.prisma.createRoom.create({
+    await this.prisma.user.update({
+      where: {
+        id: userId,
+      },
       data: {
-        roomName,
-        noOfMachines,
-        noOfSpins,
-        minJackpot,
-        maxJackpot,
-        minBet,
-        maxBet,
-        rtp,
-        currency,
+        status,
       },
     });
+    return 'Success';
   }
 
-  async getMasterList(
-    userType?: string,
-    search?: string,
-    skip?: number,
-    take?: number,
-  ): Promise<{
-    users: {
-      firstname: string;
-      lastname: string;
-      credit: number | null;
-      status: string;
-    }[];
-    total?: number;
-  }> {
-    if (userType !== 'MANAGER') {
-      throw new Error('UserType is not valid');
-    }
-    if (search && userType == 'MANAGER') {
-      const users = await this.prisma.user.findMany({
+  async unfreeze(
+    id: string,
+    status: Status,
+    machineNo?: string,
+    roomName?: string,
+  ): Promise<Machine | Room> {
+    if (roomName) {
+      const room = await this.prisma.room.findUnique({
         where: {
-          usertype: 'MANAGER',
-          username: {
-            contains: search,
-            mode: 'insensitive',
-          },
-        },
-        select: {
-          id: true,
-          firstname: true,
-          lastname: true,
-          credit: true,
-          status: true,
-          usertype: true,
+          id: id,
         },
       });
-
-      const total = await this.prisma.user.count({
-        where: {
-          usertype: 'MANAGER',
-          username: {
-            contains: search,
-            mode: 'insensitive',
-          },
-        },
-      });
-      return { users, total };
+      if (!room) {
+        throw new NotFoundException('Room not found');
+      } else {
+        return await this.prisma.room.update({
+          where: { id: id, roomName: roomName },
+          data: { status: status },
+        });
+      }
     } else {
-      const total = await this.prisma.user.count({
-        where: { usertype: userType },
-      });
-
-      const users = await this.prisma.user.findMany({
-        where: { usertype: userType },
-        skip: skip,
-        take: take,
-        select: {
-          id: true,
-          firstname: true,
-          lastname: true,
-          credit: true,
-          status: true,
-          usertype: true,
+      const machine = await this.prisma.machine.findUnique({
+        where: {
+          id: id,
         },
       });
-
-      return { users, total };
+      if (!machine) {
+        throw new NotFoundException('Machine not found');
+      } else {
+        return await this.prisma.machine.update({
+          where: { id: id, machineNo: machineNo },
+          data: { status: status },
+        });
+      }
     }
   }
 
-  async getWorkerList(
-    userType?: string,
-    search?: string,
-    skip?: number,
-    take?: number,
-  ): Promise<{
-    users: {
-      firstname: string;
-      lastname: string;
-      credit: number | null;
-      status: string;
-    }[];
-    total?: number;
+  async getUserList(options?: {
+    search?: string;
+    skip?: number;
+    take?: number;
+    UserType?: UserType;
+  }): Promise<{
+    count: number;
+    skip: number;
+    take: number;
+    data: User[];
   }> {
-    if (userType !== 'WORKER') {
-      throw new Error('UserType is not valid');
-    }
-    if (search && userType == 'WORKER') {
-      const users = await this.prisma.user.findMany({
-        where: {
-          usertype: 'WORKER',
+    const pagination = { skip: options?.skip || 0, take: options?.take || 10 };
+    let where: Prisma.UserWhereInput = {};
+    if (options?.search) {
+      const buildSearchFilter = (search: string): Prisma.UserWhereInput[] => [
+        {
           username: {
             contains: search,
             mode: 'insensitive',
           },
         },
-        select: {
-          id: true,
-          firstname: true,
-          lastname: true,
-          credit: true,
-          status: true,
-          usertype: true,
-        },
-      });
-
-      const total = await this.prisma.user.count({
-        where: {
-          usertype: 'WORKER',
-          username: {
-            contains: search,
-            mode: 'insensitive',
-          },
-        },
-      });
-      return { users, total };
-    } else {
-      const total = await this.prisma.user.count({
-        where: { usertype: userType },
-      });
-
-      const users = await this.prisma.user.findMany({
-        where: { usertype: userType },
-        skip: skip,
-        take: take,
-        select: {
-          id: true,
-          firstname: true,
-          lastname: true,
-          credit: true,
-          status: true,
-          usertype: true,
-        },
-      });
-
-      return { users, total };
+      ];
+      const search = options.search.trim().split(' ');
+      if (search.length === 0) {
+        where.OR = buildSearchFilter(options.search);
+      } else {
+        where.AND = [];
+        for (const part of search) {
+          where.AND.push({
+            OR: buildSearchFilter(part),
+          });
+        }
+      }
     }
+
+    if (options?.UserType) {
+      where = {
+        ...where,
+        userType: options.UserType,
+      };
+    }
+
+    const totalUsers = await this.prisma.user.count({
+      where,
+    });
+    const users = await this.prisma.user.findMany({
+      where,
+      orderBy: { createdAt: Prisma.SortOrder.desc },
+      skip: options?.skip || 0,
+      take: options?.take || 10,
+    });
+    const response = await Promise.all(
+      users.map(async (user) => {
+        return {
+          ...user,
+        };
+      }),
+    );
+
+    return {
+      count: totalUsers,
+      skip: pagination.skip,
+      take: pagination.take,
+      data: response,
+    };
   }
 }

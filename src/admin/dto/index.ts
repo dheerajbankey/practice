@@ -4,7 +4,7 @@ export * from './change-password-request.dto';
 export * from './authenticate-request.dto';
 export * from './create-subuser.dto';
 export * from './get-user-by-type.dto';
-export * from './create-room-dto';
 export * from './get-manager-list.dto';
 export * from './get-worker-list.dto';
 export * from './update-status.dto';
+export * from './user-unfreeze.dto';

@@ -28,11 +28,9 @@ import {
   UpdateProfileDetailsRequestDto,
   UpdateProfileImageRequestDto,
   createUserRequestDto,
-  getUserByTypeDto,
-  createRoomDto,
-  getManagerListDto,
-  getWorkerListDto,
+  getUserListDto,
   updateStatusDto,
+  userUnFreezeDto,
 } from './dto';
 
 @ApiTags('Admin')
@@ -115,18 +113,6 @@ export class AdminController extends BaseController {
     );
   }
 
-  @Get('get-all-user')
-  async getDetails(@Query() query: getUserByTypeDto) {
-    console.log('Ths is getall user');
-    const skip = query.skip ?? 0;
-    const take = query.take ?? 10;
-    const search = query.search ?? '';
-    const userType = query.userType ?? '';
-    return await this.adminService.getUserByType(userType, search, skip, take);
-  }
-
-  @Roles(UserType.Admin)
-  @UseGuards(RolesGuard)
   @Post('add-amount/:userId/:amount')
   async addAmount(
     @Req() req: AuthenticatedRequest,
@@ -151,8 +137,6 @@ export class AdminController extends BaseController {
     return { status: 'success' };
   }
 
-  @Roles(UserType.Admin)
-  @UseGuards(RolesGuard)
   @Post('updatestatus')
   async updateStatus(@Body() data: updateStatusDto) {
     const result = await this.adminService.updateStatus(
@@ -161,46 +145,27 @@ export class AdminController extends BaseController {
     );
     return { status: result };
   }
-
-  @Roles(UserType.Admin)
-  @UseGuards(RolesGuard)
-  @Post('create-room')
-  async createRoom(@Body() data: createRoomDto) {
-    return await this.adminService.createRoom(
+  @Patch('unfreeze')
+  async unfreeze(
+    @Req() req: AuthenticatedRequest,
+    @Body() data: userUnFreezeDto,
+  ) {
+    await this.adminService.unfreeze(
+      data.id,
+      data.status,
+      data.machineNo,
       data.roomName,
-      data.noOfMachines,
-      data.noOfSpins,
-      data.minJackpot,
-      data.maxJackpot,
-      data.minBet,
-      data.maxBet,
-      data.rtp,
-      data.currency,
     );
-  }
-  @Get('get-master-list')
-  async getMasterList(@Query() query: getManagerListDto) {
-    const skip = query.skip ?? 0;
-    const take = query.take ?? 10;
-    const search = query.search ?? '';
-    return await this.adminService.getMasterList(
-      query.userType,
-      search,
-      skip,
-      take,
-    );
+    return { status: 'success' };
   }
 
-  @Get('get-worker-list')
-  async getWorkerList(@Query() query: getWorkerListDto) {
-    const skip = query.skip ?? 0;
-    const take = query.take ?? 10;
-    const search = query.search ?? '';
-    return await this.adminService.getWorkerList(
-      query.userType,
-      search,
-      skip,
-      take,
-    );
+  @Get('get-user-list')
+  async getUserList(@Query() query: getUserListDto) {
+    return await this.adminService.getUserList({
+      search: query.search,
+      skip: query.skip,
+      take: query.take,
+      UserType: query.userType,
+    });
   }
 }

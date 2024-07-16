@@ -1,10 +1,13 @@
 import { join } from 'path';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import {
   Admin,
+  Machine,
   OtpTransport,
   Prisma,
+  Room,
+  Status,
   User,
   UserMeta,
   UserStatus,
@@ -162,8 +165,8 @@ export class UsersService {
         : this.config.passwordHashLength,
     );
     if (userMeta.passwordHash === passwordHash) {
-      const userType = user.usertype;
-      if (userType === 'MANAGER' || userType === 'WORKER') {
+      const userType = user.userType;
+      if (userType === UserType.Manager || userType === UserType.Worker) {
         return {
           id: user.id,
           type: userType as UserType,
@@ -178,6 +181,7 @@ export class UsersService {
     firstname: string;
     lastname: string;
     email: string;
+    userType: UserType;
     password?: string;
     dialCode?: string;
     mobile?: string;
@@ -209,6 +213,7 @@ export class UsersService {
         mobile: data.mobile,
         profileImage: data.profileImage,
         country: data.country,
+        userType: data.userType,
         meta: {
           create: {
             passwordHash,
@@ -254,6 +259,7 @@ export class UsersService {
           email: data.email,
           profileImage: data.profileImage,
           googleId: data.googleId,
+          userType: UserType.User,
         });
       }
     }
@@ -554,14 +560,16 @@ export class UsersService {
     search?: string;
     skip?: number;
     take?: number;
+    UserType?: UserType;
   }): Promise<{
     count: number;
     skip: number;
     take: number;
     data: User[];
   }> {
+    console.log('THis is usertype', options?.UserType);
     const pagination = { skip: options?.skip || 0, take: options?.take || 10 };
-    const where: Prisma.UserWhereInput = {};
+    let where: Prisma.UserWhereInput = {};
     if (options?.search) {
       const buildSearchFilter = (search: string): Prisma.UserWhereInput[] => [
         {
@@ -608,6 +616,13 @@ export class UsersService {
       }
     }
 
+    if (options?.UserType) {
+      where = {
+        ...where,
+        userType: options.UserType,
+      };
+    }
+
     const totalUsers = await this.prisma.user.count({
       where,
     });
@@ -634,5 +649,39 @@ export class UsersService {
       take: pagination.take,
       data: response,
     };
+  }
+
+  async freeze(
+    id: string,
+    status: Status,
+    usertype: string,
+  ): Promise<Machine | Room> {
+    if (usertype === 'MANAGER' || usertype === 'manager') {
+      const roomId = await this.prisma.room.findUnique({
+        where: { id: id },
+      });
+      if (!roomId) {
+        throw new NotFoundException('Room not found');
+      }
+      const updateStatus = await this.prisma.room.update({
+        where: { id: id },
+        data: { status: status },
+      });
+      return updateStatus;
+    }
+    if (usertype === 'WORKER' || usertype === 'worker') {
+      const userId = await this.prisma.machine.findUnique({
+        where: { id: id },
+      });
+      if (!userId) {
+        throw new NotFoundException('Machine not found');
+      }
+      return await this.prisma.machine.update({
+        where: { id: id },
+        data: { status: status },
+      });
+    } else {
+      throw new Error('You are not allowed to do this action');
+    }
   }
 }

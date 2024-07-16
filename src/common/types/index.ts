@@ -65,10 +65,20 @@ export interface File {
 }
 
 export enum UserType {
-  User = 'user',
-  Admin = 'admin',
-  MANAGER = 'MANAGER',
-  WORKER = 'WORKER',
+  User = 'User',
+  Admin = 'Admin',
+  Manager = 'Manager',
+  Worker = 'Worker',
+}
+
+export enum GameStatus {
+  Enable = 'enable',
+  Disable = 'disable',
+}
+
+export enum Status {
+  Freeze = 'freeze',
+  Unfreeze = 'unfreeze',
 }
 
 export interface JwtPayload {

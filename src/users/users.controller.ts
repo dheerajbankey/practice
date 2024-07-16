@@ -20,6 +20,7 @@ import {
   RolesGuard,
   UserType,
   Roles,
+  AccessGuard,
 } from '@Common';
 import { UsersService } from './users.service';
 import {
@@ -28,12 +29,12 @@ import {
   UpdateProfileDetailsRequestDto,
   UpdateProfileImageRequestDto,
   UpdateUserProfileRequestDto,
+  userFreezeDto,
 } from './dto';
 
 @ApiTags('User')
 @ApiBearerAuth()
-//@UseGuards(JwtAuthGuard, AccessGuard)
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, AccessGuard)
 @Controller('users')
 export class UsersController extends BaseController {
   constructor(private readonly usersService: UsersService) {
@@ -42,12 +43,14 @@ export class UsersController extends BaseController {
 
   // @Roles(UserType.Admin)
   // @UseGuards(RolesGuard)
+  @ApiTags('Admin', 'User')
   @Get()
   async getUsers(@Query() query: GetUsersRequestDto) {
     return await this.usersService.getAll({
       search: query.search,
       skip: query.skip,
       take: query.take,
+      UserType: query.userType,
     });
   }
 
@@ -70,7 +73,7 @@ export class UsersController extends BaseController {
     console.log('This is ctx', ctx);
     console.log('This is req.body', req.body);
     const type = ctx.user.type;
-    if (type !== 'admin') {
+    if (type !== UserType.Admin) {
       await this.usersService.updateProfileDetails({
         userId: ctx.user.id,
         username: data.username,
@@ -98,6 +101,14 @@ export class UsersController extends BaseController {
   @Get(':userId')
   async getUserProfile(@Param('userId', ParseUUIDPipe) userId: string) {
     return await this.usersService.getProfile(userId);
+  }
+
+  @Patch('freeze')
+  async freeze(@Req() req: AuthenticatedRequest, @Body() data: userFreezeDto) {
+    const ctx = this.getContext(req);
+    const type = ctx.user.type;
+    await this.usersService.freeze(data.id, data.status, type);
+    return { status: 'success' };
   }
 
   @Roles(UserType.Admin)
@@ -136,7 +147,7 @@ export class UsersController extends BaseController {
   ) {
     const ctx = this.getContext(req);
     const type = ctx.user.type;
-    if (type !== 'admin') {
+    if (type !== UserType.Admin) {
       await this.usersService.changePassword(
         ctx.user.id,
         data.oldPassword,
