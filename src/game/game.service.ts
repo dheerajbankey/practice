@@ -1,28 +1,10 @@
-//import { join } from 'path';
 import { Cache } from 'cache-manager';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import {
-  //   Admin,
-  //   AdminMeta,
-  //   AdminStatus,
-  Game,
-  GameStatus,
-  // Machine,
-  //Prisma,
-  //   Room,
-  //   User,
-  //   UserStatus,
-} from '@prisma/client';
+import { Game, GameStatus, Prisma } from '@prisma/client';
 import { adminConfigFactory } from '@Config';
-import {
-  StorageService,
-  UtilsService,
-  //   ValidatedUser,
-  //   UserType,
-  //   getAccessGuardCacheKey,
-} from '@Common';
+import { StorageService, UtilsService } from '@Common';
 import { PrismaService } from '../prisma';
 
 @Injectable()
@@ -95,5 +77,61 @@ export class GameService {
       },
     });
     return result;
+  }
+
+  async removeGame(gameId: string): Promise<Game> {
+    const game = await this.prisma.game.delete({
+      where: {
+        id: gameId,
+      },
+    });
+    return game;
+  }
+
+  async getGameList(options?: {
+    search?: string;
+    skip?: number;
+    take?: number;
+  }): Promise<{
+    count: number;
+    skip: number;
+    take: number;
+    data: Game[];
+  }> {
+    const pagination = { skip: options?.skip || 0, take: options?.take || 10 };
+    let where: Prisma.GameWhereInput = {};
+    if (options?.search) {
+      const searchTerms = options.search.trim().split(' ');
+      where = {
+        OR: searchTerms.map((term) => ({
+          gameName: {
+            contains: term,
+            mode: 'insensitive',
+          },
+        })),
+      };
+    }
+
+    const totalGames = await this.prisma.game.count({
+      where,
+    });
+
+    const games = await this.prisma.game.findMany({
+      where,
+      orderBy: { gameName: 'desc' },
+      skip: pagination.skip,
+      take: pagination.take,
+    });
+
+    const response = games.map((game) => ({
+      ...game,
+    }));
+
+    return {
+      count: totalGames,
+      skip: pagination.skip,
+      take: pagination.take,
+      data: response,
+    };
   }
 }

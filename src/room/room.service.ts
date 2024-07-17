@@ -359,7 +359,7 @@ export class RoomService {
           },
         },
       });
-      return { games, total: totals };
+      return { games, total: totals, skip, take };
     }
     const room = await this.prisma.machine.findUnique({
       where: { id: machineId },

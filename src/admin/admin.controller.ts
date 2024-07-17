@@ -113,6 +113,17 @@ export class AdminController extends BaseController {
     );
   }
 
+  @Post('admin-add-amount/:amount')
+  async adminAddAmount(
+    @Req() req: AuthenticatedRequest,
+    @Param('amount', ParseIntPipe) amount: number,
+  ) {
+    const ctx = this.getContext(req);
+    const adminId = ctx.user.id;
+    await this.adminService.adminAddAmount(adminId, amount);
+    return { status: 'success' };
+  }
+
   @Post('add-amount/:userId/:amount')
   async addAmount(
     @Req() req: AuthenticatedRequest,

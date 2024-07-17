@@ -141,13 +141,13 @@ export class MachineService {
       },
     });
 
-    const userbalance = machine.balance === null ? 0 : machine.balance;
+    const machinebalance = machine.balance === null ? 0 : machine.balance;
     const updatedUser = await this.prisma.machine.update({
       where: {
         id: machineId,
       },
       data: {
-        balance: userbalance + amount,
+        balance: machinebalance + amount,
       },
     });
 
