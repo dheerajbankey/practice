@@ -1,16 +1,16 @@
 import {
   Body,
   Controller,
+  Delete,
+  Get,
   Patch,
   Post,
-  //   Query,
-  //   Req,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   AccessGuard,
-  // AuthenticatedRequest,
   BaseController,
   JwtAuthGuard,
   Roles,
@@ -18,7 +18,13 @@ import {
   UserType,
 } from '@Common';
 import { GameService } from './game.service';
-import { createGameDto, updateGameStatusDto, addMinMaxGameBetDto } from './dto';
+import {
+  createGameDto,
+  updateGameStatusDto,
+  addMinMaxGameBetDto,
+  deleteGameDto,
+} from './dto';
+import { getGameListDto } from './dto/get-gamelist.dto';
 
 @ApiTags('Game')
 @ApiBearerAuth()
@@ -50,5 +56,20 @@ export class GameController extends BaseController {
       data.maxBet,
     );
     return { status: 'success' };
+  }
+
+  @Delete('remove-game')
+  async removeGame(@Body() data: deleteGameDto) {
+    await this.gameService.removeGame(data.gameId);
+    return { status: 'success' };
+  }
+
+  @Get('get-game-list')
+  async getUserList(@Query() query: getGameListDto) {
+    return await this.gameService.getGameList({
+      search: query.search,
+      skip: query.skip,
+      take: query.take,
+    });
   }
 }

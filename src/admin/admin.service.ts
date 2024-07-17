@@ -495,4 +495,17 @@ export class AdminService {
       data: response,
     };
   }
+
+  async adminAddAmount(adminId: string, amount: number): Promise<Admin> {
+    const admin = await this.getById(adminId);
+    const balanceToUpdate = admin.balance === null ? 0 : admin.balance;
+    return await this.prisma.admin.update({
+      where: {
+        id: adminId,
+      },
+      data: {
+        balance: balanceToUpdate + amount,
+      },
+    });
+  }
 }

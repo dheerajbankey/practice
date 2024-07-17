@@ -25,7 +25,7 @@ import { MachineService } from './machine.service';
 
 @ApiTags('Machine')
 @ApiBearerAuth()
-@Roles(UserType.Admin)
+@Roles(UserType.Admin, UserType.Manager)
 @UseGuards(JwtAuthGuard, AccessGuard, RolesGuard)
 @Controller('machine')
 export class MachineController extends BaseController {
